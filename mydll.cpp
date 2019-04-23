@@ -405,7 +405,7 @@ public:
 	void evaluate_troop_convenience(vector<Troop> my);      //用到我方士兵距离之和评价的便利度
 	void evaluate_all(vector<Enemy> enemy, vector<Troop> my);   //评估函数
 
-	void defense(vector<Troop> total_troop);
+	void defense(vector<Troop>& total_troop);
 	void evaluate(vector<Enemy> enemy, vector<Troop> my);   //两种指令
 
 	void static_generate();         //利用静态变量的激活函数
@@ -600,8 +600,16 @@ void player_ai(Info& info)
 	//初始化完成
 	Decision MyDecision(&MyProperties);
 	MyDecision.command();
-	//cout << "Attacksoldier" << AttackSoldier.size() << " DefenseSoldier" << DefenseSoldier.size() << endl;
-	//cout << "Round " << info.round << " end." << endl << endl;
+	cout << "Attacksoldier" << AttackSoldier.size() << " DefenseSoldier" << DefenseSoldier.size() << endl;
+	for (unsigned int i = 0; i < AttackSoldier.size(); i++) {
+		cout << AttackSoldier[i] << " ";
+	}
+	cout << endl;
+	for (unsigned int i = 0; i < DefenseSoldier.size(); i++) {
+		cout << DefenseSoldier[i] << " ";
+	}
+	cout << endl;
+	cout << "Round " << info.round << " end." << endl << endl;
 	//cin >> n;
 }
 
@@ -685,7 +693,7 @@ void Tower::evaluate_all(vector<Enemy> enemy, vector<Troop> my) {
 
 }
 
-void Tower::defense(vector<Troop> total_troop) {
+void Tower::defense(vector<Troop>& total_troop) {
 
 	if (this->enemy.size() != 0) {
 		int k = 0;
@@ -699,9 +707,9 @@ void Tower::defense(vector<Troop> total_troop) {
 					mytroop[i].base.x_position <= point[0] + length &&
 					mytroop[i].base.y_position <= point[1] + length) {
 					mytroop[i].go();
-					for (unsigned int i = 0; i < total_troop.size(); i++) {
-						if (total_troop[i].base.id == mytroop[i].base.id) {
-							total_troop[i].state[TOWER] = true;
+					for (unsigned int j = 0; j < total_troop.size(); j++) {
+						if (total_troop[j].base.id == mytroop[i].base.id) {
+							total_troop[j].state[TOWER] = true;
 							break;
 						}
 					}
@@ -1072,14 +1080,16 @@ void Troop::march() {
 }
 
 void Troop::attack() {
-	endplace(inf->towerInfo[current_attack_tower[0]].position);
-	int d = distance(base.x_position, base.y_position, place[0], place[1]);
-	/*if (base.x_position == place[0] && base.y_position == place[1]) {
-	gettower();
-	}*/
+	if (!state[TOWER]) {
+		endplace(inf->towerInfo[current_attack_tower[0]].position);
+		int d = distance(base.x_position, base.y_position, place[0], place[1]);
+		/*if (base.x_position == place[0] && base.y_position == place[1]) {
+		gettower();
+		}*/
 
-	if (d<base.range) gettower();
-	else go();
+		if (d < base.range) gettower();
+		else go();
+	}
 }
 
 void Troop::defense(int towerid) {
@@ -1170,11 +1180,19 @@ void Decision::defense() {
 	}
 
 	if (towerid != -1) {    //如果有需要回防的兵塔
+
+		for (unsigned int i = 0; i < AttackSoldier.size(); i++) {  //派去攻击的士兵不必回防
+			data->MyTroop[findorigin(AttackSoldier[i])].tag = 1;
+			//cout << "士兵" << AttackSoldier[i] << "tag被标记为1" << endl;
+		}
+
 		if (DefenseSoldier.size()) {
 			data->MyTroop[findorigin(DefenseSoldier[0])].defense(towerid);
 			//cout << "当前既有回防士兵" << findorigin(DefenseSoldier[0]) << endl;
 			//cout << "总回防士兵" << DefenseSoldier.size() << endl;
 		}
+
+
 		else {
 			for (int i = 0; i < TOTAL_TOWER; i++)
 			{
@@ -1183,13 +1201,36 @@ void Decision::defense() {
 				}
 			}
 
+			bool find_free_soldier_flag = false;
+
 			for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //找到零散士兵让其回防
 				if (data->MyTroop[i].tag != 1) {
 					DefenseSoldier.push_back(data->MyTroop[i].base.id);
 					data->MyTroop[findorigin(DefenseSoldier[0])].defense(towerid);
+					find_free_soldier_flag = true;
 					//cout << "零散士兵" << MyTroop[i].base.id << "出发回防" << endl;
 					break;
 				}
+			}
+
+			int min_defense_distance = 80;
+			int defense_id = -1;
+			int erased_AttackSoldier_index = -1;
+
+			if (!find_free_soldier_flag) {
+				for (unsigned int i = 0; i < AttackSoldier.size(); i++) {  //如果没找到零散士兵，必须从攻击士兵里调用防守
+					int temp_distance = distance(data->MyTroop[findorigin(AttackSoldier[i])].base.position, inf->towerInfo[towerid].position);
+					if (temp_distance < min_defense_distance) {
+						defense_id = AttackSoldier[i];
+						erased_AttackSoldier_index = i;
+					}
+				}
+			}
+			if (defense_id != -1) {  //选定回防士兵之后
+				DefenseSoldier.push_back(AttackSoldier[erased_AttackSoldier_index]);
+				data->MyTroop[findorigin(DefenseSoldier[0])].defense(towerid);
+				AttackSoldier.erase(AttackSoldier.begin() + erased_AttackSoldier_index);  //去除其在攻击士兵中的位置
+
 			}
 		}
 	}
@@ -1202,7 +1243,7 @@ void Decision::attack() {
 
 	if (current_attack_tower[0] < 0)
 		return;
-	
+
 	if (last_attack_tower != current_attack_tower[0]) {  //如果更换了攻击目标，可能是塔已经被攻克，证明需要重新规划
 
 														 //cout << "更换攻击塔，清空攻击士兵列表" << endl;
@@ -1234,6 +1275,10 @@ void Decision::attack() {
 			data->MyTroop[findorigin(DefenseSoldier[i])].tag = 1;
 			//cout << "士兵" << DefenseSoldier[i] << "tag被标记为1" << endl;
 		}
+		for (unsigned int i = 0; i < AttackSoldier.size(); i++) {  //派去攻击的士兵不必充当防御士兵，很大可能性是过路士兵
+			data->MyTroop[findorigin(AttackSoldier[i])].tag = 1;
+			//cout << "士兵" << AttackSoldier[i] << "tag被标记为1" << endl;
+		}
 
 		for (int i = 0; i < TOTAL_TOWER; i++)
 		{
@@ -1244,18 +1289,19 @@ void Decision::attack() {
 					if (data->MyTroop[findorigin(data->TowerInf[i].mytroop[j].base.id)].tag == 0) {
 						//如果有一个士兵处于空闲状态，不控制它，作为防御士兵
 						data->MyTroop[findorigin(data->TowerInf[i].mytroop[j].base.id)].tag = 1;
+						cout << "塔" << i << "具有防守士兵" << data->TowerInf[i].mytroop[j].base.id << endl;
 						break;
 					}
 				}
 			}
+
 		}
 
 		//确定好tag后，找到自由士兵进行攻击
 
 		for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //找到零散士兵让其攻击
-			if (data->MyTroop[i].tag == 0 && 
-			data->MyTroop[i].state[TOWER] == 0 &&
-			!in_list(data->MyTroop[i].base.id, AttackSoldier)) {
+			if (data->MyTroop[i].tag == 0 &&
+				!in_list(data->MyTroop[i].base.id, AttackSoldier)) {
 				AttackSoldier.push_back(data->MyTroop[i].base.id);
 				if (data->TowerInf[current_attack_tower[0]].enemy.size() <= AttackSoldier.size())
 					data->MyTroop[i].attack();
@@ -1552,6 +1598,7 @@ void Decision::command() {
 		defense();
 		attack();
 		//cout << "行动结束" << endl;
+		clean();
 
 	}
 	else {
