@@ -959,14 +959,16 @@ void Troop::go() {
 					for (int i = 0; i < left + 1; i++) {
 						if (m == 0) {
 							int a = base.x_position + i * (2 * way[0] - 5), b = base.y_position + (len - i) * (1 - 2 * way[2]);
-							if (inf->pointInfo[a][b].occupied_type == 0 && inf->pointInfo[a][b].land != 2) {
-								if (base.type != 3 && base.type != 7 && i<=way[1] &&len-i<=way[3]) { x = i; y = len - i; m = 1; }
-								else {
-									if (inf->pointInfo[a][b].land != 3 && i <= way[1] && len - i <= way[3]) {
-										x = i; y = len - i; m = 1;
+							if (flag(a, b) != 0){
+								if (inf->pointInfo[a][b].occupied_type == 0 && inf->pointInfo[a][b].land != 2) {
+									if (base.type != 3 && base.type != 7 && i <= way[1] && len - i <= way[3]) { x = i; y = len - i; m = 1; }
+									else {
+										if (inf->pointInfo[a][b].land != 3 && i <= way[1] && len - i <= way[3]) {
+											x = i; y = len - i; m = 1;
+										}
 									}
 								}
-							}
+						}
 
 						}
 					}
