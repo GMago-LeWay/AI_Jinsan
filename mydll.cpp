@@ -540,6 +540,7 @@ public:
 	}
 
 	int findorigin(int soldierid);  //通过士兵id找到我的士兵的下标
+	bool in_list(int id, vector<int> v);         //判断id是否在列表v中
 
 	void shortterm();
 
@@ -1110,6 +1111,16 @@ int Decision::findorigin(int soldierid) {  //通过士兵id找到我的士兵的
 	return returnid;
 }
 
+bool Decision::in_list(int id, vector<int> v) {
+	bool return_flag = false;
+	for (unsigned int i = 0; i < v.size(); i++) {
+		if (id == v[i]) {
+			return_flag = true;
+			break;
+		}
+	}
+}
+
 void Decision::defense() {
 	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
 		data->MyTroop[i].tag = 0;
@@ -1242,7 +1253,9 @@ void Decision::attack() {
 		//确定好tag后，找到自由士兵进行攻击
 
 		for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //找到零散士兵让其攻击
-			if (data->MyTroop[i].tag == 0&& data->MyTroop[i].state[TOWER] == 0) {
+			if (data->MyTroop[i].tag == 0 && 
+			data->MyTroop[i].state[TOWER] == 0 &&
+			!in_list(data->MyTroop[i].base.id, AttackSoldier)) {
 				AttackSoldier.push_back(data->MyTroop[i].base.id);
 				if (data->TowerInf[current_attack_tower[0]].enemy.size() <= AttackSoldier.size())
 					data->MyTroop[i].attack();
