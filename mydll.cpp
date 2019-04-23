@@ -707,6 +707,7 @@ void Tower::defense(vector<Troop>& total_troop) {
 					mytroop[i].base.x_position <= point[0] + length &&
 					mytroop[i].base.y_position <= point[1] + length) {
 					mytroop[i].go();
+					mytroop[i].clean();
 					for (unsigned int j = 0; j < total_troop.size(); j++) {
 						if (total_troop[j].base.id == mytroop[i].base.id) {
 							total_troop[j].state[TOWER] = true;
@@ -1101,8 +1102,13 @@ void Troop::attack() {
 }
 
 void Troop::defense(int towerid) {
-	endplace(inf->towerInfo[towerid].position);
-	go();
+	if (!state[TOWER]) {
+		endplace(inf->towerInfo[towerid].position);
+		go();
+	}
+	else {
+		cout << "士兵" << base.id << "被塔占用，不能进行回防" << endl;
+	}
 }
 
 void Troop::act() {
