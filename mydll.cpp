@@ -1119,6 +1119,7 @@ bool Decision::in_list(int id, vector<int> v) {
 			break;
 		}
 	}
+	return return_flag;
 }
 
 void Decision::defense() {
@@ -1238,7 +1239,6 @@ void Decision::attack() {
 		{
 			if (data->TowerInf[i].mytroop.size() != 0 &&
 				data->TowerInf[i].base.owner == current_id) {
-				int temp_tag = data->MyTroop[findorigin(data->TowerInf[i].mytroop[0].base.id)].tag;  //每个塔至少保证一个士兵防御
 
 				for (unsigned int j = 0; j < data->TowerInf[i].mytroop.size(); j++) {
 					if (data->MyTroop[findorigin(data->TowerInf[i].mytroop[j].base.id)].tag == 0) {
