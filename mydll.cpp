@@ -398,7 +398,7 @@ public:
 	void evaluate_troop_convenience(vector<Troop> my);      //用到我方士兵距离之和评价的便利度
 	void evaluate_all(vector<Enemy> enemy, vector<Troop> my);   //评估函数
 
-	void defense();
+	void defense(vector<Troop> total_troop);
 	void evaluate(vector<Enemy> enemy, vector<Troop> my);   //两种指令
 
 	void static_generate();         //利用静态变量的激活函数
@@ -677,7 +677,7 @@ void Tower::evaluate_all(vector<Enemy> enemy, vector<Troop> my) {
 
 }
 
-void Tower::defense() {
+void Tower::defense(vector<Troop> total_troop) {
 
 	if (this->enemy.size() != 0) {
 		int k = 0;
@@ -691,7 +691,12 @@ void Tower::defense() {
 					mytroop[i].base.x_position <= point[0] + length &&
 					mytroop[i].base.y_position <= point[1] + length) {
 					mytroop[i].go();
-					
+					for (unsigned int i = 0; i < total_troop.size(); i++) {
+						if (total_troop[i].base.id == mytroop[i].base.id) {
+							total_troop[i].state[TOWER] = true;
+							break;
+						}
+					}
 				}
 			}
 			if (distance(mytroop[i].base.position, enemy[k].base.position) <= mytroop[i].base.range)
@@ -1119,6 +1124,9 @@ void Decision::attack() {
 		data->MyTroop[i].tag = 0;
 	}
 
+	if (current_attack_tower[0] < 0)
+		return;
+	
 	if (last_attack_tower != current_attack_tower[0]) {  //如果更换了攻击目标，可能是塔已经被攻克，证明需要重新规划
 
 														 //cout << "更换攻击塔，清空攻击士兵列表" << endl;
@@ -1170,7 +1178,7 @@ void Decision::attack() {
 		//确定好tag后，找到自由士兵进行攻击
 
 		for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //找到零散士兵让其攻击
-			if (data->MyTroop[i].tag == 0) {
+			if (data->MyTroop[i].tag == 0&& data->MyTroop[i].state[TOWER] == 0) {
 				AttackSoldier.push_back(data->MyTroop[i].base.id);
 				if (data->TowerInf[current_attack_tower[0]].enemy.size() <= AttackSoldier.size())
 					data->MyTroop[i].attack();
@@ -1352,7 +1360,7 @@ void Decision::command_tower() {
 	{
 		//有敌人启动防御
 
-		occupied[i].defense();
+		occupied[i].defense(data->MyTroop);
 
 
 	}
