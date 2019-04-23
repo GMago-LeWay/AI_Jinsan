@@ -13,6 +13,7 @@ using namespace std;
 #define NUM_KINDS_SOLDIER 8
 #define UPGRADE_POINT 6
 #define COMMAND_LENGTH 2
+#define DIVISION_OF_SOLDIER_PROPOTION 8
 
 enum ControlState {
 	TOWER, DECISION
@@ -21,7 +22,8 @@ enum ControlState {
 /************全局储存变量***********/
 
 unsigned int CurrentState = 0;    //当前生产状态，小于NUM_KINDS_SOLDIER时为士兵，等于NUM_KINDS_SOLDIER时为升级塔
-int propotion[NUM_KINDS_SOLDIER] = { 0,0,1,3,0,2,1,1 };    //造兵比例
+int propotion_short[NUM_KINDS_SOLDIER] = { 0,0,1,3,0,0,1,0 };    //初期造兵造兵比例
+int propotion_long[NUM_KINDS_SOLDIER] = { 0,0,1,2,0,1,1,1 };    //初期造兵造兵比例
 
 int current_id;
 int current_attack_tower[TOTAL_TOWER];
@@ -1258,8 +1260,13 @@ void Decision::analyse_troop() {
 
 void Decision::product() { //生产，需利用generate后的数据
 	int Soldier_resourse[8] = { 0,40,40,50,70,55,60,70 };
+	int* propotion;
+	if (data->MyTroop.size() < DIVISION_OF_SOLDIER_PROPOTION)
+		propotion = propotion_short;
+	else
+		propotion = propotion_long;
 
-	if (inf->round > 20) {
+	if (true) {
 		double cos_cost[NUM_KINDS_SOLDIER] = { 0 };
 		for (int i = 1; i < NUM_KINDS_SOLDIER; i++) {  //判断与目标的夹角
 			int temp_Decision[NUM_KINDS_SOLDIER] = { 0 };
@@ -1304,7 +1311,7 @@ void Decision::product() { //生产，需利用generate后的数据
 	//升级塔
 
 	int upgrade_signal[UPGRADE_POINT][2] = {
-		{ 4,0 },{ 7,0 },{ 12,0 },{ 15,0 },{ 20,0 },{ 100,0 }
+		{ 6,0 },{ 9,0 },{ 12,0 },{ 15,0 },{ 20,0 },{ 100,0 }
 	};
 	int upgrade_at_soldiernum;
 
@@ -1326,6 +1333,7 @@ void Decision::product() { //生产，需利用generate后的数据
 		for (int i = 0; i < UPGRADE_POINT; i++) {
 			if (upgrade_signal[i][1] == 0) {
 				upgrade_at_soldiernum = upgrade_signal[i][0];
+				break;
 			}
 		}
 
@@ -1453,7 +1461,7 @@ void Decision::command() {
 	command_troop();  //向兵传达指令
 
 	clean();
-	product();
+
 
 	bool short_term_flag = index[12];
 
@@ -1475,7 +1483,7 @@ void Decision::command() {
 		shortterm();
 	}
 
-
+	product();
 
 
 }
