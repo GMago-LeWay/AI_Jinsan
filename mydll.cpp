@@ -206,6 +206,9 @@ public:
 		for (unsigned int i = 0; i < COMMAND_LENGTH; i++) {
 			state[i] = false;
 		}
+		for (int i = 0; i < 4; i++) {
+			delta[i] = 0;
+		}
 
 	}
 	Troop(const Troop& t) {
@@ -223,6 +226,7 @@ public:
 
 		for (int i = 0; i < 4; i++) {
 			way[i] = t.way[i];
+			delta[i] = t.delta[i];
 			if (i < 2) {
 				place[i] = t.place[i];
 				point[i] = t.point[i];
@@ -294,6 +298,7 @@ public:
 
 	int way[4];       //x方向走左右+距离+y方向走左右+距离
 	int place[2];     //目标点
+	int delta[4];      //坐标更新量
 
 	int detail[11][11]; //记录每个点的占据情况
 	int point[2];        //视野左下角坐标
@@ -933,62 +938,119 @@ void Troop::gettower() {
 void Troop::go() {
 	move(base.move_left);
 	if (way[2] != -1 || way[0] != -1) {
-		if (way[3] == base.move_left
-			&&inf->pointInfo[base.x_position][base.y_position + way[3] * (1 - 2 * way[2])].occupied_type == 0
-			&& inf->pointInfo[base.x_position][base.y_position + way[3] * (1 - 2 * way[2])].land != 2) {
-			inf->myCommandList.addCommand(Move, base.id, way[2], way[3]);
-
-		}
-
-		else if (way[3] < base.move_left && way[3]>0
-			&& inf->pointInfo[base.x_position][base.y_position + way[3] * (1 - 2 * way[2])].occupied_type == 0
-			&& inf->pointInfo[base.x_position][base.y_position + way[3] * (1 - 2 * way[2])].land != 2)
-		{
-			inf->myCommandList.addCommand(Move, base.id, way[2], way[3]);
-
-
-			if (way[1] >= base.move_left - way[3])
-			{
-				way[1] = base.move_left - way[3];
-				inf->myCommandList.addCommand(Move, base.id, way[0], way[1]);
-
+		if (way[2] == -1) {
+			int inedx = 0;
+			for (int i = 1; i <= way[1]; i++) {
+				int x = base.x_position + i * (2 * way[0] - 5), y = base.y_position;
+				if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) index = i;
 			}
-			else if (way[1]>0) {
-				inf->myCommandList.addCommand(Move, base.id, way[0], way[1]);
-
+			if (index != 0) {
+				inf->myCommandList.addCommand(Move, base.id, way[0], index);
+				delta[way[0]] = index;
 			}
-		}
-
-
-		else if (way[2] == -1) {
-			if (base.move_left == 1)
-				inf->myCommandList.addCommand(Move, base.id, way[0], way[1]);
 			else {
-				if (inf->pointInfo[base.x_position + way[1] * (2 * way[0] - 5)][base.y_position].occupied_type == 0
-					&& inf->pointInfo[base.x_position + way[1] * (2 * way[0] - 5)][base.y_position].land != 2)
-				{
-					inf->myCommandList.addCommand(Move, base.id, way[0], way[1]);
+				int index = 0;
+				for (int i = -base.move_left; i <= base.move_left; i++) {
+					int x = base.x_position + 2 * way[0] - 5, y = base.y_position + i;
+					if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) {
+						if (i < 0) {
+							inf->myCommandList.addCommand(Move, base.id, 1, -i);
+							delta[1] = -i;
+							for (int j = 0; j <= base.move_left + i; j++)
+							{
+								inf->myCommandList.addCommand(Move, base.id, way[0], 1);
+								delta[way[0]] ++;
+							}
+							index = 1;
+						}
+						else {
+							inf->myCommandList.addCommand(Move, base.id, 0, i);
+							delta[0] = i;
+							for (int j = 0; j <= base.move_left - i; j++) {
+								inf->myCommandList.addCommand(Move, base.id, way[0], 1);
+								delta[way[0]]++;
+							}
+							index = 1;
+						}
+						break;
+					}
 				}
-
-				else
-					inf->myCommandList.addCommand(Move, base.id, way[0], way[1] - 1);
-
+				if (index == 0) {
+					inf->myCommandList.addCommand(Move, base.id, way[0], way[1]);
+					delta[way[0]] = way[1];
+				}
 			}
 		}
-		else if (way[0] == -1 && inf->pointInfo[base.x_position][base.y_position + way[3] * (1 - 2 * way[2])].occupied_type != 0) {
-			inf->myCommandList.addCommand(Move, base.id, 2, 3);
+		else if (way[0] = -1) {
+			int inedx = 0;
+			for (int i = 1; i <= way[3]; i++) {
+				int x = base.x_position, y = base.y_position + i * (1 - 2 * way[2]);
+				if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) index = i;
+			}
+			if (index != 0) {
+				inf->myCommandList.addCommand(Move, base.id, way[2], index);
+				delta[way[2]] = index;
+			}
+			else {
+				int index = 0;
+				for (int i = -base.move_left; i <= base.move_left; i++) {
+					int x = base.x_position + i, y = base.y_position + 1 - 2 * way[2];
+					if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) {
+						if (i < 0) {
+							inf->myCommandList.addCommand(Move, base.id, 2, -i);
+							delta[2] = -i;
+							for (int j = 0; j < base.move_left + i; j++)
+							{
+								inf->myCommandList.addCommand(Move, base.id, way[2], 1);
+								delta[way[2]]++;
+							}
+							index = 1;
+						}
+						else {
+							inf->myCommandList.addCommand(Move, base.id, 3, i);
+							delta[3] = i;
+							for (int j = 0; j < base.move_left - i; j++) {
+								inf->myCommandList.addCommand(Move, base.id, way[2], 1);
+								delta[way[2]]++;
+							}
 
+							index = 1;
+						}
+						break;
+					}
+				}
+				if (index == 0) {
+					inf->myCommandList.addCommand(Move, base.id, way[2], way[3]);
+					delta[way[2]] = way[3];
+				}
+			}
 		}
-
 		else {
-			if (inf->pointInfo[base.x_position + way[1] * (2 * way[0] - 5)][base.y_position].occupied_type == 0
-				&& inf->pointInfo[base.x_position + way[1] * (2 * way[0] - 5)][base.y_position].land != 2)
-				inf->myCommandList.addCommand(Move, base.id, way[0], way[1]);
-			else
-				inf->myCommandList.addCommand(Move, base.id, way[0], way[1] - 1);
+			int index[2] = { 0 };
+			for (int i = 1; i <= way[3]; i++) {
+				int x = base.x_position, y = base.y_position + i * (1 - 2 * way[2]);
+				if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 0) index[0] = i;
+			}
+			if (index[0] != 0) {
+				inf->myCommandList.addCommand(Move, base.id, way[2], index[0]);
+				delta[way[2]] = index[0];
+			}
+			int mi = min(way[1], base.move_left - index[0]);
+			for (int i = 1; i <= mi; i++) {
+				int x = base.x_position + i * (2 * way[0] - 5), y = base.y_position + index[0] * (1 - 2 * way[2]);
+				if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 0) index[1] = i;
+			}
+			if (index[1] != 0) {
+				inf->myCommandList.addCommand(Move, base.id, way[0], index[1]);
+				delta[way[0]] = index[1];
+			}
+			if (index[0] == 0 && index[1] == 0) {
+				inf->myCommandList.addCommand(Move, base.id, way[2], way[3]);
+				delta[way[2]] = way[3];
+			}
+
 		}
 	}
-
 }
 
 void Troop::clean() {
