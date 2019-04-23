@@ -209,6 +209,8 @@ public:
 		for (int i = 0; i < 4; i++) {
 			delta[i] = 0;
 		}
+		place[0] = base.x_position;
+		place[1] = base.y_position;
 
 	}
 	Troop(const Troop& t) {
