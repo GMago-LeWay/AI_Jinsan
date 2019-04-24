@@ -802,6 +802,7 @@ void Tower::static_generate() {
 	double normalizer_danger = Tower::sum_danger / TOTAL_TOWER;
 	double normalizer_convenience = Tower::sum_convenience / TOTAL_TOWER;
 	double normalizer_troop_convenience = Tower::sum_troop_convenience / TOTAL_TOWER;
+	double normalizer_blood = 300;
 
 	//cout <<"正则化因子"<< normalizer_accessible << " " << normalizer_danger << " " << normalizer_convenience;
 
@@ -809,10 +810,10 @@ void Tower::static_generate() {
 	double weigh_danger = 2;
 	double weigh_convenience = 2;
 	double weigh_troop_convenience = 2;
-	double weigh_blood = 1;
+	double weigh_blood = 2;
 
 
-	attack_evaluation = weigh_accessible * accessible / normalizer_accessible + weigh_danger * danger / normalizer_danger + weigh_troop_convenience * troop_convenience / normalizer_troop_convenience;
+	attack_evaluation = weigh_accessible * accessible / normalizer_accessible + weigh_danger * danger / normalizer_danger + weigh_troop_convenience * troop_convenience / normalizer_troop_convenience + weigh_blood * base.blood / normalizer_blood;
 	product_evaluation = weigh_convenience * convenience / normalizer_convenience;
 
 	//cout << "塔" << base.id << "攻击评估:" << attack_evaluation << endl;
