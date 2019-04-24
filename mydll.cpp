@@ -662,7 +662,7 @@ void player_ai(Info& info)
 	//初始化完成
 	Decision MyDecision(&MyProperties);
 	MyDecision.command();
-	cout << "Attacksoldier" << AttackSoldier.size() << " DefenseSoldier" << DefenseSoldier.size() << endl;
+	/*cout << "Attacksoldier" << AttackSoldier.size() << " DefenseSoldier" << DefenseSoldier.size() << endl;
 	for (unsigned int i = 0; i < AttackSoldier.size(); i++) {
 		cout << AttackSoldier[i] << " ";
 	}
@@ -670,8 +670,8 @@ void player_ai(Info& info)
 	for (unsigned int i = 0; i < DefenseSoldier.size(); i++) {
 		cout << DefenseSoldier[i] << " ";
 	}
-	cout << endl;
-	cout << "Round " << info.round << " end." << endl << endl;
+	cout << endl;*/
+	//cout << "Round " << info.round << " end." << endl << endl;
 	//cin >> n;
 }
 
@@ -1377,9 +1377,9 @@ void Decision::defense() {
 
 		for (unsigned int i = 0; i < id_distance2.size() 
 			&& DefenseSoldier.size() < data->TowerInf[towerid].enemy.size(); i++) {  //调用从攻击士兵里抽调的防守士兵
-			DefenseSoldier.push_back(id_distance[i].index);
-			data->MyTroop[findorigin(id_distance[i].index)].defense(towerid);
-			erased_AttackSoldier.push_back(id_distance[i].index);
+			DefenseSoldier.push_back(id_distance2[i].index);
+			data->MyTroop[findorigin(id_distance2[i].index)].defense(towerid);
+			erased_AttackSoldier.push_back(id_distance2[i].index);
 			if (DefenseSoldier.size() >= data->TowerInf[towerid].enemy.size()) {
 				enough_flag = true;
 				break;
