@@ -1193,10 +1193,8 @@ void Troop::clean() {
 		int x = base.x_position - base.range, y = base.y_position - base.range;
 		for (int i = 0; i < 2 * base.range + 1; i++)
 			for (int j = 0; j < 2 * base.range + 1; j++)
-			{
-				int d = distance(base.x_position, base.y_position, x + i, y + j);
-				if (inf->pointInfo[x + i][y + j].occupied_type == 1 && d <= base.range && base.attackable)
-					inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+			{    if (inf->pointInfo[x + i][y + j].occupied_type == 1 && base.attackable)
+		             inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
 			}
 	}
 }
