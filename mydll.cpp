@@ -156,10 +156,47 @@ int Ability_TSoldierType(TSoldier s) {  //对某个场上士兵的评估
 
 class MapUnit {
 public:
+	MapUnit(){}
+	MapUnit(TPoint t){
+		x = t.x;
+		y = t.y;
+	}
+	MapUnit(int x, int y) :x(x), y(y) {
 
-	int danger;
+	}
+	MapUnit(const MapUnit& map) {
+		x = map.x;
+		y = map.y;
+	}
 
-	TPoint base;
+	bool operator==(const MapUnit& mapunit) {
+		return x == mapunit.x && y == mapunit.y;
+	}
+
+	int x;
+	int y;
+
+};
+
+class Map {
+public:
+	Map(){}
+	Map(TPoint center, int radius = 7) {
+		int scan[2][2];
+		AreaDecision(radius, scan, center.x, center.y);
+	}
+	Map(const Map& m) {
+
+	}
+
+	void initialize(){}
+	void route(int a, int b, int x, int y){}
+
+	void Dijistra(){}
+
+	vector<MapUnit> map;
+	vector<MapUnit> result;
+
 };
 
 class Enemy {   //对攻击目标的评估
@@ -211,6 +248,9 @@ public:
 		}
 		place[0] = base.x_position;
 		place[1] = base.y_position;
+				
+		current_position[0] = base.x_position;
+		current_position[1] = base.y_position;
 
 	}
 	Troop(const Troop& t) {
@@ -231,6 +271,7 @@ public:
 			delta[i] = t.delta[i];
 			if (i < 2) {
 				place[i] = t.place[i];
+				current_position[i] = t.current_position[i];
 				point[i] = t.point[i];
 			}
 		}
@@ -274,6 +315,9 @@ public:
 	void gettower();
 	void go();
 
+	void step_go(int x, int y);
+	void map_go(Map&);
+	
 	void investigation();  //视野内侦查
 
 	void evaluate();  //总评估
@@ -302,6 +346,8 @@ public:
 	int place[2];     //目标点
 	int delta[4];      //坐标更新量
 
+	int current_position[2];
+	
 	int detail[11][11]; //记录每个点的占据情况
 	int point[2];        //视野左下角坐标
 
@@ -1074,6 +1120,33 @@ void Troop::go() {
 		}
 	
 	}
+
+
+void Troop::step_go(int x, int y) {
+	if (distance(x, y, current_position[0], current_position[1]) != 1) {  //发生错误
+		return;
+	}
+	if (current_position[0] != x) {
+		int delta_x = x - current_position[0];
+		int direction = (delta_x + 5) / 2;                //-1,1->2LEFT, 3RIGHT
+		inf->myCommandList.addCommand(Move, base.id, direction, 1);
+		current_position[0] = x;
+	}
+	else {
+		int delta_y = y - current_position[1];
+		int direction = (delta_y - 1) / (-2);                //-1,1->1DOWN, 0UP
+		inf->myCommandList.addCommand(Move, base.id, direction, 1);
+		current_position[1] = y;
+	}
+}
+
+void Troop::map_go(Map& m) {
+
+	for (unsigned int i = 1; i < m.result.size() && i<=base.move_left; i++) {
+		step_go(m.result[i].x, m.result[i].y);
+		
+	}
+}
 
 void Troop::clean() {
 	if (base.attackable) {
