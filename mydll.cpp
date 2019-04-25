@@ -336,6 +336,7 @@ public:
 
 	void evaluate();  //总评估
 	void clean();
+	void clean(int a);
 	void march();
 	void attack();    //四种指令
 	void defense(int towerid);
@@ -1012,14 +1013,14 @@ void Troop::go() {
 	//int apojo;
 	//cin >> apojo;
 	move(base.move_left);
-	if (way[2] != -1 || way[0] != -1) {
+	if (way[2] != -1 || way[0] != -1 &&base.move_left<6) {
 		if (way[0] != -1 && way[2] != -1)
 		{
 			int x = 0, y = 0, m = 0;
 			int left = base.move_left;
 			if (way[1] + way[3] > left) {
 				for (int len = left; len > 0; len--) {
-					for (int i = 0; i < left + 1; i++) {
+					for (int i = 0; i < len + 1; i++) {
 						if (m == 0) {
 							int a = base.x_position + i * (2 * way[0] - 5), b = base.y_position + (len - i) * (1 - 2 * way[2]);
 							if (flag(a, b) != 0) {
@@ -1159,7 +1160,7 @@ void Troop::go() {
 			}
 		}
 	}
-	clean();
+	clean(1);
 }
 
 void Troop::step_go(int x, int y) {
@@ -1193,11 +1194,47 @@ void Troop::clean() {
 		int x = base.x_position - base.range, y = base.y_position - base.range;
 		for (int i = 0; i < 2 * base.range + 1; i++)
 			for (int j = 0; j < 2 * base.range + 1; j++)
-			{    if (inf->pointInfo[x + i][y + j].occupied_type == 1 && base.attackable)
-		             inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+			{
+				if (flag(x + i, y + j) != 0) {
+					if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
+						int belong = 0;
+						for (unsigned int k = 0; k<mytroop.size(); k++)
+							if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
+								belong = 1;
+							}
+						if (belong == 0)
+							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+					}
+				if(inf->pointInfo[x + i][y + j].occupied_type == 2&& base.attackable)
+					inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+
+				}
 			}
 	}
 }
+void Troop::clean(int a) {
+	if (base.attackable) {
+		int x = base.x_position - base.range - base.move_left, y = base.y_position - base.range - base.move_left;
+		for (int i = 0; i < 2 * (base.range + base.move_left) + 1; i++)
+			for (int j = 0; j < 2 * (base.range + base.move_left) + 1; j++)
+			{
+				if (flag(x + i, y + j) != 0) {
+					if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
+						int belong = 0;
+						for (unsigned int k = 0; k<mytroop.size(); k++)
+							if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
+								belong = 1;
+							}
+						if(belong==0)
+						inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+					}
+					if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
+						inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+				}
+			}
+	}
+}
+
 
 void Troop::march() {
 
