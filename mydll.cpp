@@ -1271,8 +1271,15 @@ void Decision::defense() {
 	bool flag = true;
 	if (DefenseSoldier.size()) {  //判断是否达到目标
 		for (unsigned int i = 0; i < occupied.size(); i++) {
-			if (occupied[i].mytroop.size() - occupied[i].enemy.size() < 0) {
-				flag = false;
+			if (inf->round <= 40) {
+				if (occupied[i].mytroop.size() - occupied[i].enemy.size() < 0) {
+					flag = false;
+				}
+			}
+			else {
+				if (occupied[i].mytroop.size() - occupied[i].enemy.size() < 2) {
+					flag = false;
+				}
 			}
 		}
 		if (flag) {
@@ -1297,8 +1304,8 @@ void Decision::defense() {
 	if (DefenseSoldier.size() >= data->TowerInf[towerid].enemy.size()) {  //防守士兵足够，无需回防
 		towerid = -1;
 	}
-	/*
-	if (towerid == -1) {  //如果所有塔都没有敌人，寻找没有我方士兵的塔
+	
+	if (towerid == -1 && inf->round > 40) {  //如果所有塔都没有敌人，寻找没有我方士兵的塔
 		for (int i = 0; i < TOTAL_TOWER; i++)
 		{
 			if (data->TowerInf[i].base.owner == current_id) {
@@ -1310,7 +1317,7 @@ void Decision::defense() {
 			}
 		}
 	}
-	*/
+	
 
 	if (towerid != -1) {    //如果有需要回防的兵塔
 
@@ -1318,15 +1325,16 @@ void Decision::defense() {
 			data->MyTroop[findorigin(AttackSoldier[i])].tag = 1;
 			//cout << "士兵" << AttackSoldier[i] << "tag被标记为1" << endl;
 		}
-
+		//cout << "Check 4.1" << endl;
 		if (DefenseSoldier.size()) {
 			for (unsigned int i = 0; i < DefenseSoldier.size(); i++) {
+				//cout << "Check 4.1.1." << i << endl;
 				data->MyTroop[findorigin(DefenseSoldier[i])].defense(towerid);
 				//cout << "当前既有回防士兵" << findorigin(DefenseSoldier[0]) << endl;
 				//cout << "总回防士兵" << DefenseSoldier.size() << endl;
 			}
 		}
-
+		//cout << "Check 4.2" << endl;
 		//以下处理逻辑会导致多一个回防兵
 
 		/*for (int i = 0; i < TOTAL_TOWER; i++)
@@ -1352,6 +1360,9 @@ void Decision::defense() {
 			}
 		}
 		sort(id_distance.begin(), id_distance.end(), value);
+
+		//cout << "Check 4.3" << endl;
+
 		for (unsigned int i = 0; i < id_distance.size()
 			&& DefenseSoldier.size() < data->TowerInf[towerid].enemy.size(); i++) {
 			DefenseSoldier.push_back(id_distance[i].index);  //零散士兵进入
@@ -1362,22 +1373,29 @@ void Decision::defense() {
 			}
 		}
 
+		//cout << "Check 4.4" << endl;
+
 		vector<int> erased_AttackSoldier;  //需要从攻击士兵中抹去的士兵id列表
 
 		vector<Pair> id_distance2;  //抽调攻击士兵时记录id与distance，index储存士兵id，value储存距离
 		if (!enough_flag) {
 			for (unsigned int i = 0; i < AttackSoldier.size(); i++) {  //如果没找到零散士兵，必须从攻击士兵里调用防守
 				int temp_distance = distance(data->MyTroop[findorigin(AttackSoldier[i])].base.position, inf->towerInfo[towerid].position);
-				if(!in_list(data->MyTroop[findorigin(AttackSoldier[i])].base.id, DefenseSoldier))  //判断其是否在Defense列表内
+				if (!in_list(data->MyTroop[findorigin(AttackSoldier[i])].base.id, DefenseSoldier))  //判断其是否在Defense列表内
 					id_distance2.push_back(Pair(AttackSoldier[i], temp_distance));
 			}
 		}
 
 		sort(id_distance2.begin(), id_distance2.end(), value);
 
-		for (unsigned int i = 0; i < id_distance2.size() 
+		//cout << "Check 4.5" << endl;
+
+		for (unsigned int i = 0; i < id_distance2.size()
 			&& DefenseSoldier.size() < data->TowerInf[towerid].enemy.size(); i++) {  //调用从攻击士兵里抽调的防守士兵
+			//cout << "Check 4.5.I." << i << endl;
+			//cout << "push" << id_distance2[i].index << endl;
 			DefenseSoldier.push_back(id_distance2[i].index);
+			//cout << "Check 4.5."<< i << endl;
 			data->MyTroop[findorigin(id_distance2[i].index)].defense(towerid);
 			erased_AttackSoldier.push_back(id_distance2[i].index);
 			if (DefenseSoldier.size() >= data->TowerInf[towerid].enemy.size()) {
@@ -1386,6 +1404,7 @@ void Decision::defense() {
 			}
 		}
 
+		//cout << "Check 4.6" << endl;
 
 		if (erased_AttackSoldier.size()) {  //选定回防士兵之后				
 			for (unsigned int i = 0; i < erased_AttackSoldier.size(); i++) {
@@ -1424,8 +1443,18 @@ void Decision::attack() {
 	///cout << endl;
 	///cout << "我方士兵数量" << inf->playerInfo[current_id].soldier_num << " 数量超过此数量启动攻击" << inf->playerInfo[current_id].tower_num + 1 + DefenseSoldier.size() << endl;
 
-	if (inf->playerInfo[current_id].soldier_num > int(DefenseSoldier.size())) {
-		//士兵数量大于回防数量，调兵走打塔
+	bool attack_flag = false;
+	if (inf->round < 40) {
+		if (inf->playerInfo[current_id].soldier_num > int(DefenseSoldier.size()))
+			attack_flag = true;
+	}
+	else {
+		if (inf->playerInfo[current_id].soldier_num > int(DefenseSoldier.size()) + 2 * inf->playerInfo[current_id].tower_num)
+			attack_flag = true;
+	}
+
+	if (attack_flag) {
+		
 
 		if (AttackSoldier.size()) {
 			for (unsigned int i = 0; i < AttackSoldier.size(); i++) {
@@ -1445,24 +1474,28 @@ void Decision::attack() {
 			data->MyTroop[findorigin(AttackSoldier[i])].tag = 1;
 			//cout << "士兵" << AttackSoldier[i] << "tag被标记为1" << endl;
 		}
-		/*
+		
+		
+
 		for (int i = 0; i < TOTAL_TOWER; i++)         //使每个我方塔至少有一人防御
 		{
 			if (data->TowerInf[i].mytroop.size() != 0 &&
 				data->TowerInf[i].base.owner == current_id) {
-
+				int num = 0;
 				for (unsigned int j = 0; j < data->TowerInf[i].mytroop.size(); j++) {
 					if (data->MyTroop[findorigin(data->TowerInf[i].mytroop[j].base.id)].tag == 0) {
 						//如果有一个士兵处于空闲状态，不控制它，作为防御士兵
 						data->MyTroop[findorigin(data->TowerInf[i].mytroop[j].base.id)].tag = 1;
+						num++;
 						//cout << "塔" << i << "具有防守士兵" << data->TowerInf[i].mytroop[j].base.id << endl;
-						break;
+						if (num == 2)
+							break;
 					}
 				}
 			}
 
 		}
-		*/
+		
 
 		//确定好tag后，找到自由士兵进行攻击
 
