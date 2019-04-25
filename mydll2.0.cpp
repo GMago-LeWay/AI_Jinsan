@@ -19,30 +19,30 @@ enum State {
 	FREE, TOWER_DEFENSE, DEFENSE, ATTACK
 };
 
-/************È«¾Ö´¢´æ±äÁ¿***********/
+/************å…¨å±€å‚¨å­˜å˜é‡***********/
 
-unsigned int CurrentState = 0;    //µ±Ç°Éú²ú×´Ì¬£¬Ğ¡ÓÚNUM_KINDS_SOLDIERÊ±ÎªÊ¿±ø£¬µÈÓÚNUM_KINDS_SOLDIERÊ±ÎªÉı¼¶Ëş
-int propotion_short[NUM_KINDS_SOLDIER] = { 0,0,1,3,0,0,1,0 };    //³õÆÚÔì±øÔì±ø±ÈÀı
-int propotion_long[NUM_KINDS_SOLDIER] = { 0,0,1,2,0,1,1,1 };    //³õÆÚÔì±øÔì±ø±ÈÀı
+unsigned int CurrentState = 0;    //å½“å‰ç”Ÿäº§çŠ¶æ€ï¼Œå°äºNUM_KINDS_SOLDIERæ—¶ä¸ºå£«å…µï¼Œç­‰äºNUM_KINDS_SOLDIERæ—¶ä¸ºå‡çº§å¡”
+int propotion_short[NUM_KINDS_SOLDIER] = { 0,0,1,3,0,0,1,0 };    //åˆæœŸé€ å…µé€ å…µæ¯”ä¾‹
+int propotion_long[NUM_KINDS_SOLDIER] = { 0,0,1,2,0,1,1,1 };    //åˆæœŸé€ å…µé€ å…µæ¯”ä¾‹
 
 int current_id;
 vector<int> current_attack_tower;
 
 bool first_tower_flag = true;
-int last_attack_tower;  //¼ÇÂ¼ÉÏÒ»¸ö¹¥»÷µÄËş
+int last_attack_tower;  //è®°å½•ä¸Šä¸€ä¸ªæ”»å‡»çš„å¡”
 
 vector<int> current_defense_tower;
 
-int MyTowerID[TOTAL_TOWER];    //´æ´¢ÎÒ·½ËşID
-int N_MyTowerID[TOTAL_TOWER];      //´æ´¢Î´Õ¼ÁìËşID
-int SoldierNum[NUM_KINDS_SOLDIER] = { 0, };           //¼ÇÂ¼¸÷ÖÖÊ¿±øµÄÊıÁ¿
+int MyTowerID[TOTAL_TOWER];    //å­˜å‚¨æˆ‘æ–¹å¡”ID
+int N_MyTowerID[TOTAL_TOWER];      //å­˜å‚¨æœªå é¢†å¡”ID
+int SoldierNum[NUM_KINDS_SOLDIER] = { 0, };           //è®°å½•å„ç§å£«å…µçš„æ•°é‡
 
-static int index[100] = { 0, };      //¶ÌÆÚÖ¸ÁîÖ´ĞĞÇé¿ö
+static int index[100] = { 0, };      //çŸ­æœŸæŒ‡ä»¤æ‰§è¡Œæƒ…å†µ
 
 
-int n;         //²âÊÔflag
+int n;         //æµ‹è¯•flag
 
-int data_soldier[8][6] = {//4ÊÓÒ°·¶Î§ 5¹¥»÷·¶Î§
+int data_soldier[8][6] = {//4è§†é‡èŒƒå›´ 5æ”»å‡»èŒƒå›´
 	{ 0,0,0,0,0,0 },
 { 25,15,100,3,7,1 },
 { 35,5,80,3,7,2 },
@@ -58,21 +58,21 @@ int watch[4][2][2] = {
 { { 41,36 },{ 36,7 } },
 { { 36,7 },{ 7,13 } },
 { { 7,13 },{ 13,41 } }
-};//Õì²éµã
+};//ä¾¦æŸ¥ç‚¹
 int hide[4][2] = {
 	{ 21,25 },
 { 27,25 },
 { 24,28 },
 { 24,23 }
-};//Âñ·üµã
+};//åŸ‹ä¼ç‚¹
 
 Info* inf;
 
-/*************È«¾Ö´¢´æ±äÁ¿½áÊø**********/
+/*************å…¨å±€å‚¨å­˜å˜é‡ç»“æŸ**********/
 
 
 
-/********»ù´¡¹¦ÄÜº¯Êı**********************/
+/********åŸºç¡€åŠŸèƒ½å‡½æ•°**********************/
 
 int min(int a, int b) {
 	int c = 0;
@@ -115,7 +115,7 @@ void setzero(int a[4])
 
 }
 
-//ÅĞ¶ÏµØÍ¼ÊÇ·ñÔ½½ç
+//åˆ¤æ–­åœ°å›¾æ˜¯å¦è¶Šç•Œ
 int flag(int a, int b) {
 	int fl = 0;
 	if (a <= 49 && a >= 0 && b >= 0 && b <= 49)
@@ -123,14 +123,14 @@ int flag(int a, int b) {
 	return fl;
 }
 
-void AreaDecision(int radius, int scan_point[][2], int center_x, int center_y) { //È·¶¨ËÑË÷ÇøÓò
+void AreaDecision(int radius, int scan_point[][2], int center_x, int center_y) { //ç¡®å®šæœç´¢åŒºåŸŸ
 	scan_point[0][0] = (center_x - radius >= 0 ? center_x - radius : 0);
 	scan_point[0][1] = (center_y - radius >= 0 ? center_y - radius : 0);
 	scan_point[1][0] = (scan_point[0][0] + 2 * radius <= 49 ? scan_point[0][0] + 2 * radius : 49);
 	scan_point[1][1] = (scan_point[0][1] + 2 * radius <= 49 ? scan_point[0][1] + 2 * radius : 49);
 
 }
-//¾àÀë¼ÆËã
+//è·ç¦»è®¡ç®—
 int distance(int a, int b, int x, int y) {
 	return abs(a - x) + abs(b - y);
 }
@@ -139,20 +139,20 @@ int distance(TPoint p1, TPoint p2) {
 	return abs(p1.x - p2.x) + abs(p1.y - p2.y);
 }
 
-//¼ÆËãÇ°×ºÆ½¾ùÖµ
+//è®¡ç®—å‰ç¼€å¹³å‡å€¼
 double Average(double CurrentAverage, int CurrentNumber, int NewData) {
 	double NewSum = CurrentAverage * CurrentNumber + NewData;
 	return NewSum / (CurrentNumber + 1);
 }
 
-int Ability_TSoldierType(TSoldier s) {  //¶ÔÄ³¸ö³¡ÉÏÊ¿±øµÄÆÀ¹À
+int Ability_TSoldierType(TSoldier s) {  //å¯¹æŸä¸ªåœºä¸Šå£«å…µçš„è¯„ä¼°
 	return 10 * data_soldier[s.type][0] + 5 * data_soldier[s.type][1] + 2 * s.blood + 5 * data_soldier[s.type][3];
 }
 
 
-/*********»ù´¡¹¦ÄÜº¯Êı½áÊø*********/
+/*********åŸºç¡€åŠŸèƒ½å‡½æ•°ç»“æŸ*********/
 
-/*********ÀàµÄ¶¨Òå**********/
+/*********ç±»çš„å®šä¹‰**********/
 
 class Pair {
 
@@ -213,7 +213,7 @@ public:
 
 };
 
-class Enemy {   //¶Ô¹¥»÷Ä¿±êµÄÆÀ¹À
+class Enemy {   //å¯¹æ”»å‡»ç›®æ ‡çš„è¯„ä¼°
 public:
 	Enemy() {
 
@@ -229,18 +229,18 @@ public:
 		base = e.base;
 	}
 
-	void evaluate();     //ÆÀ¹À
+	void evaluate();     //è¯„ä¼°
 
-	int danger;   //Î£ÏÕ³Ì¶È
-	int attack_possibility;  //¹¥»÷¿ÉÄÜĞÔ
-	int value;   //¹¥»÷¼ÛÖµ
+	int danger;   //å±é™©ç¨‹åº¦
+	int attack_possibility;  //æ”»å‡»å¯èƒ½æ€§
+	int value;   //æ”»å‡»ä»·å€¼
 
 	TSoldier base;
 
 };
 
 
-class Troop {   //Ê¿±ø
+class Troop {   //å£«å…µ
 public:
 	Troop() {
 
@@ -249,7 +249,7 @@ public:
 		base = t;
 		index = index_soldierinfo;
 		view_length = data_soldier[base.type][4];
-		length = inf->soldierInfo[index].move_left;  //ĞĞ¶¯Á¦
+		length = inf->soldierInfo[index].move_left;  //è¡ŒåŠ¨åŠ›
 		duty = FREE;
 
 		point[0] = base.x_position - (view_length - 1) / 2;
@@ -321,60 +321,60 @@ public:
 		*/
 	}
 
-	void move(int length);      //ÒÆ¶¯·½Ïò£¬length²½³¤
+	void move(int length);      //ç§»åŠ¨æ–¹å‘ï¼Œlengthæ­¥é•¿
 	void endplace(int x, int y);      //
 	void endplace(TPoint t);
 	void attackplace(int x, int y);
 	void attackplace(TPoint t);
-	void search(int length, int type);   //ËÑË÷µØĞÎ£¬lengthÊÓÒ°£¬typeµØĞÎ
+	void search(int length, int type);   //æœç´¢åœ°å½¢ï¼Œlengthè§†é‡ï¼Œtypeåœ°å½¢
 	void gettower();
 	void go();
 
 	void step_go(int x, int y);
 	void map_go(Map&);
 
-	void investigation();  //ÊÓÒ°ÄÚÕì²é
+	void investigation();  //è§†é‡å†…ä¾¦æŸ¥
 
-	void evaluate();  //×ÜÆÀ¹À
+	void evaluate();  //æ€»è¯„ä¼°
 	void clean();
 	void clean(int a);
 
 	bool change_duty(State s);
 	void march();
-	void attack();    //ËÄÖÖÖ¸Áî
+	void attack();    //å››ç§æŒ‡ä»¤
 	void defense(int towerid);
 
-	void act();    //×ÜĞĞ¶¯
+	void act();    //æ€»è¡ŒåŠ¨
 
 
 
 	TSoldier base;
 	unsigned int index;
 
-	int view_length;         //ÊÓÒ°±ß³¤
-	int length;              //ĞĞ¶¯Á¦
+	int view_length;         //è§†é‡è¾¹é•¿
+	int length;              //è¡ŒåŠ¨åŠ›
 
 	State duty;
 
-	int attack_possibility;      //¹¥»÷¿ÉÄÜĞÔ
-	int defense_need;            //·ÀÊØĞèÒª
-	int tag = 0;                   //±éÀú±êÇ©
-	int signal;             //ÎÒ·½µĞ·½ÊıÁ¿²î
+	int attack_possibility;      //æ”»å‡»å¯èƒ½æ€§
+	int defense_need;            //é˜²å®ˆéœ€è¦
+	int tag = 0;                   //éå†æ ‡ç­¾
+	int signal;             //æˆ‘æ–¹æ•Œæ–¹æ•°é‡å·®
 
-	int way[4];       //x·½Ïò×ß×óÓÒ+¾àÀë+y·½Ïò×ß×óÓÒ+¾àÀë
-	int place[2];     //Ä¿±êµã
-	int delta[4];      //×ø±ê¸üĞÂÁ¿
+	int way[4];       //xæ–¹å‘èµ°å·¦å³+è·ç¦»+yæ–¹å‘èµ°å·¦å³+è·ç¦»
+	int place[2];     //ç›®æ ‡ç‚¹
+	int delta[4];      //åæ ‡æ›´æ–°é‡
 
 	int current_position[2];
 
-	int detail[11][11]; //¼ÇÂ¼Ã¿¸öµãµÄÕ¼¾İÇé¿ö
-	int point[2];        //ÊÓÒ°×óÏÂ½Ç×ø±ê
+	int detail[11][11]; //è®°å½•æ¯ä¸ªç‚¹çš„å æ®æƒ…å†µ
+	int point[2];        //è§†é‡å·¦ä¸‹è§’åæ ‡
 
 	vector<Troop> mytroop;
 	vector<Enemy> enemy;
 
-	TPoint attack_target;        //¹¥»÷Ä¿±ê
-	TPoint defense_target;       //·ÀÊØ·½Ïò
+	TPoint attack_target;        //æ”»å‡»ç›®æ ‡
+	TPoint defense_target;       //é˜²å®ˆæ–¹å‘
 
 	bool state[COMMAND_LENGTH];
 
@@ -384,7 +384,7 @@ public:
 
 };
 
-class Tower {                //¶ÔËşµÄÆÀ¹À
+class Tower {                //å¯¹å¡”çš„è¯„ä¼°
 public:
 	Tower(const TowerInfo& t) {
 		base = t;
@@ -397,7 +397,7 @@ public:
 		point[0] = base.x_position - (length - 1) / 2;
 		point[1] = base.y_position - (length - 1) / 2;
 
-		//»ñÈ¡ÖÜÎ§ÊÓÒ°
+		//è·å–å‘¨å›´è§†é‡
 		for (int i = 0; i < length; i++) {
 			for (int j = 0; j < length; j++) {
 				if (flag(point[0] + i, point[1] + j))
@@ -406,14 +406,14 @@ public:
 					detail[i][j] = -1;
 				if (detail[i][j] == 1) {
 					int soldier_id = inf->pointInfo[point[0] + i][point[1] + j].soldier;
-					//±éÀúÑ°ÕÒËùÕ¼Ê¿±ø
+					//éå†å¯»æ‰¾æ‰€å å£«å…µ
 					for (unsigned int k = 0; k < inf->soldierInfo.size(); k++) {
-						if (inf->soldierInfo[k].id == soldier_id) {  //ÕÒµ½Ê¿±ø
+						if (inf->soldierInfo[k].id == soldier_id) {  //æ‰¾åˆ°å£«å…µ
 
 							if (inf->soldierInfo[k].owner == current_id) {
-								//cout << "¿ªÊ¼push×Ô¼ºµÄÊ¿±ø" << endl;
+								//cout << "å¼€å§‹pushè‡ªå·±çš„å£«å…µ" << endl;
 								this->mytroop.push_back(Troop(inf->soldierInfo[k], k));
-								//cout << "½áÊøpush×Ô¼ºµÄÊ¿±ø" << endl;
+								//cout << "ç»“æŸpushè‡ªå·±çš„å£«å…µ" << endl;
 							}
 							else {
 								this->enemy.push_back(Enemy(inf->soldierInfo[k]));
@@ -424,13 +424,13 @@ public:
 				}
 			}
 		}
-		/*cout << "Ëş" << base.id << " ÓµÓĞÕß" << base.owner << " ÎÒ·½Ê¿±øÊıÁ¿" << mytroop.size() << " µĞ·½Ê¿±øÊıÁ¿" << enemy.size();
-		cout << " ÎÒ·½Ê¿±ø";
+		/*cout << "å¡”" << base.id << " æ‹¥æœ‰è€…" << base.owner << " æˆ‘æ–¹å£«å…µæ•°é‡" << mytroop.size() << " æ•Œæ–¹å£«å…µæ•°é‡" << enemy.size();
+		cout << " æˆ‘æ–¹å£«å…µ";
 		for (unsigned int i = 0; i < mytroop.size(); i++) {
 		cout << mytroop[i].base.id << " ";
 		}
 
-		cout << " µĞ·½Ê¿±ø";
+		cout << " æ•Œæ–¹å£«å…µ";
 		for (unsigned int i = 0; i < enemy.size(); i++) {
 		cout << enemy[i].base.id << " ";
 		}
@@ -467,21 +467,21 @@ public:
 		base = t.base;
 	}
 
-	void evaluate_danger(vector<Enemy> enemy, vector<Troop> my);        //¼ÆËãÎ£ÏÕĞÔ
-	void evaluate_accessible();          //¼ÆËã¿É½Ó½üĞÔ
+	void evaluate_danger(vector<Enemy> enemy, vector<Troop> my);        //è®¡ç®—å±é™©æ€§
+	void evaluate_accessible();          //è®¡ç®—å¯æ¥è¿‘æ€§
 	void evaluate_convenience();
-	void evaluate_troop_convenience(vector<Troop> my);      //ÓÃµ½ÎÒ·½Ê¿±ø¾àÀëÖ®ºÍÆÀ¼ÛµÄ±ãÀû¶È
-	void evaluate_all(vector<Enemy> enemy, vector<Troop> my);   //ÆÀ¹Àº¯Êı
+	void evaluate_troop_convenience(vector<Troop> my);      //ç”¨åˆ°æˆ‘æ–¹å£«å…µè·ç¦»ä¹‹å’Œè¯„ä»·çš„ä¾¿åˆ©åº¦
+	void evaluate_all(vector<Enemy> enemy, vector<Troop> my);   //è¯„ä¼°å‡½æ•°
 
 	unsigned int basicneed();
 	unsigned int is_dangerous();
 
 	void defense(vector<Troop>& total_troop);
-	void evaluate(vector<Enemy> enemy, vector<Troop> my);   //Á½ÖÖÖ¸Áî
+	void evaluate(vector<Enemy> enemy, vector<Troop> my);   //ä¸¤ç§æŒ‡ä»¤
 
-	void static_generate();         //ÀûÓÃ¾²Ì¬±äÁ¿µÄ¼¤»îº¯Êı
+	void static_generate();         //åˆ©ç”¨é™æ€å˜é‡çš„æ¿€æ´»å‡½æ•°
 
-	void act();   //ĞĞ¶¯
+	void act();   //è¡ŒåŠ¨
 
 	static int sum_accessible;
 	static int sum_convenience;
@@ -490,23 +490,23 @@ public:
 
 	int detail[11][11];
 	int point[2];
-	int length;                     //ËşµÄÊÓÒ°
+	int length;                     //å¡”çš„è§†é‡
 	vector<Troop> mytroop;
 	vector<Enemy> enemy;
 
-	int danger;               //±íÊ¾Î£ÏÕ³Ì¶È£¬ÕıÎªµĞ·½¿ØÖÆ£¬¸ºÎªÎÒ·½¿ØÖÆ
-	int accessible;           //¿É½Ó½ü³Ì¶È
-	int convenience;          //¹¥Ëş±ãÀû¶È
-	int troop_convenience;         //¹¥Ëş±ãÀû¶È£¬ÓÃÊ¿±ø¾àÀëÖ®ºÍºâÁ¿
+	int danger;               //è¡¨ç¤ºå±é™©ç¨‹åº¦ï¼Œæ­£ä¸ºæ•Œæ–¹æ§åˆ¶ï¼Œè´Ÿä¸ºæˆ‘æ–¹æ§åˆ¶
+	int accessible;           //å¯æ¥è¿‘ç¨‹åº¦
+	int convenience;          //æ”»å¡”ä¾¿åˆ©åº¦
+	int troop_convenience;         //æ”»å¡”ä¾¿åˆ©åº¦ï¼Œç”¨å£«å…µè·ç¦»ä¹‹å’Œè¡¡é‡
 
 	int soldierneed = 0;
 
-								   /*******Íâ²¿ĞŞ¸ÄÇø*****/
-	double attack_evaluation;   //¿É¹¥»÷ĞÔÆÀ¹À£¬Ô½Ğ¡Ô½ÈİÒ×
-	double product_evaluation;   //Éú²úĞÔÆÀ¹À£¬Ô½Ğ¡Ô½·½±ã
+								   /*******å¤–éƒ¨ä¿®æ”¹åŒº*****/
+	double attack_evaluation;   //å¯æ”»å‡»æ€§è¯„ä¼°ï¼Œè¶Šå°è¶Šå®¹æ˜“
+	double product_evaluation;   //ç”Ÿäº§æ€§è¯„ä¼°ï¼Œè¶Šå°è¶Šæ–¹ä¾¿
 
 
-								 /******Íâ²¿ĞŞ¸ÄÇø½áÊø***************/
+								 /******å¤–éƒ¨ä¿®æ”¹åŒºç»“æŸ***************/
 
 	TowerInfo base;
 
@@ -524,11 +524,11 @@ bool high_danger(const Tower& t1, const Tower& t2) {
 	return t1.danger > t2.danger;
 }
 
-class Properties {  //ÎÒ·½ÊôĞÔ
+class Properties {  //æˆ‘æ–¹å±æ€§
 public:
 
-	Properties(Info& info) :EnemyEvaluation(4) {  //¹¹Ôìº¯Êı
-												  //Çå¿Õµ±Ç°Ê¿±ø
+	Properties(Info& info) :EnemyEvaluation(4) {  //æ„é€ å‡½æ•°
+												  //æ¸…ç©ºå½“å‰å£«å…µ
 		for (int i = 0; i < NUM_KINDS_SOLDIER; i++) {
 			SoldierNum[i] = 0;
 		}
@@ -536,7 +536,7 @@ public:
 		int my_id = info.myID;
 		current_id = my_id;
 
-		for (int i = 0; i < 4; i++) {               //»ñÈ¡¸÷·½ÊôĞÔĞÅÏ¢
+		for (int i = 0; i < 4; i++) {               //è·å–å„æ–¹å±æ€§ä¿¡æ¯
 			if (info.playerInfo[i].id == my_id) {
 				attack = info.playerInfo[i].population * 10 + info.playerInfo[i].tower_num * 50 + info.playerInfo[i].resource * 1;
 				EnemyEvaluation[i] = -1;
@@ -546,29 +546,29 @@ public:
 			}
 		}
 
-		//Ö¸ÕëÖ¸ÏòÕıÈ·
+		//æŒ‡é’ˆæŒ‡å‘æ­£ç¡®
 		inf = &info;
 
-		//»ñÈ¡ÎÒ·½ËşÓë·ÇÎÒ·½ËşĞÅÏ¢
+		//è·å–æˆ‘æ–¹å¡”ä¸éæˆ‘æ–¹å¡”ä¿¡æ¯
 		int MyTowerID_iter = 0;
 		int N_MyTowerID_iter = 0;
 		for (int i = 0; i < TOTAL_TOWER; i++) {
 			if (inf->towerInfo[i].owner == my_id) {
-				MyTowerID[MyTowerID_iter] = inf->towerInfo[i].id;  //½«MytowerIDÌîÈëÎÒ·½Ëşid
+				MyTowerID[MyTowerID_iter] = inf->towerInfo[i].id;  //å°†MytowerIDå¡«å…¥æˆ‘æ–¹å¡”id
 				MyTowerID_iter++;
-				//cout << "ÎÒ·½Ëş" << MyTowerID[MyTowerID_iter - 1] << endl;
+				//cout << "æˆ‘æ–¹å¡”" << MyTowerID[MyTowerID_iter - 1] << endl;
 
 			}
 			else {
 				N_MyTowerID[N_MyTowerID_iter] = inf->towerInfo[i].id;
 				N_MyTowerID_iter++;
-				//cout << "·ÇÎÒ·½Ëş" << N_MyTowerID[N_MyTowerID_iter - 1] << endl;
+				//cout << "éæˆ‘æ–¹å¡”" << N_MyTowerID[N_MyTowerID_iter - 1] << endl;
 
 			}
-			TowerInf.push_back(inf->towerInfo[i]);      //ĞÅÏ¢¸´ÖÆ
+			TowerInf.push_back(inf->towerInfo[i]);      //ä¿¡æ¯å¤åˆ¶
 
 		}
-		while (MyTowerID_iter<TOTAL_TOWER)                 //¿ÕÎ»ÓÃ-1Ìî³ä
+		while (MyTowerID_iter<TOTAL_TOWER)                 //ç©ºä½ç”¨-1å¡«å……
 		{
 			MyTowerID[MyTowerID_iter] = -1;
 			MyTowerID_iter++;
@@ -579,12 +579,12 @@ public:
 			N_MyTowerID_iter++;
 		}
 
-		//»ñÈ¡ÎÒ·½ÓëµĞ·½Ê¿±øĞÅÏ¢
+		//è·å–æˆ‘æ–¹ä¸æ•Œæ–¹å£«å…µä¿¡æ¯
 
 		for (unsigned int i = 0; i < inf->soldierInfo.size(); i++) {
 			if (inf->soldierInfo[i].owner == my_id) {
 				MyTroop.push_back(Troop(inf->soldierInfo[i], i));
-				SoldierNum[inf->soldierInfo[i].type]++;  //¼ÆÊı
+				SoldierNum[inf->soldierInfo[i].type]++;  //è®¡æ•°
 			}
 			else {
 				EnemyTroop.push_back(inf->soldierInfo[i]);
@@ -594,12 +594,12 @@ public:
 	}
 
 
-	double attack;       //¹¥»÷Á¦
-	double defense;          //·ÀÓùÁ¦
-	int swift;         //ÒÆ¶¯ÄÜÁ¦
-	int demolition;       //²ğËşÄÜÁ¦
+	double attack;       //æ”»å‡»åŠ›
+	double defense;          //é˜²å¾¡åŠ›
+	int swift;         //ç§»åŠ¨èƒ½åŠ›
+	int demolition;       //æ‹†å¡”èƒ½åŠ›
 
-	vector<double> EnemyEvaluation;    //µĞÈËÆÀ¹ÀÖµ
+	vector<double> EnemyEvaluation;    //æ•Œäººè¯„ä¼°å€¼
 	vector<Tower> TowerInf;
 	vector<Troop> MyTroop;
 	vector<Enemy> EnemyTroop;
@@ -608,7 +608,7 @@ public:
 };
 
 
-class Decision {      //¾ö²ß
+class Decision {      //å†³ç­–
 public:
 
 	Decision() {}
@@ -616,32 +616,32 @@ public:
 		data = p;
 	}
 
-	int findorigin(int soldierid);  //Í¨¹ıÊ¿±øidÕÒµ½ÎÒµÄÊ¿±øµÄÏÂ±ê
-	bool in_list(int id, vector<int> v);         //ÅĞ¶ÏidÊÇ·ñÔÚÁĞ±ívÖĞ
+	int findorigin(int soldierid);  //é€šè¿‡å£«å…µidæ‰¾åˆ°æˆ‘çš„å£«å…µçš„ä¸‹æ ‡
+	bool in_list(int id, vector<int> v);         //åˆ¤æ–­idæ˜¯å¦åœ¨åˆ—è¡¨vä¸­
 
 	void shortterm();
-	int get_duty_num(State s);   //»ñÈ¡s×´Ì¬µÄÊ¿±ø×ÜÊı
+	int get_duty_num(State s);   //è·å–sçŠ¶æ€çš„å£«å…µæ€»æ•°
 	void setfree(State s);
 
 	void analyse_tower();
 	void analyse_troop();
 
-	void command_tower();   //Ö¸»ÓËş
-	void command_troop();   //Ö¸»Ó±ø
+	void command_tower();   //æŒ‡æŒ¥å¡”
+	void command_troop();   //æŒ‡æŒ¥å…µ
 
 	void clean();
 	void product();
 	void defense();
-	void attack();    //ÈıÖÖÃüÁî·½Ê½
+	void attack();    //ä¸‰ç§å‘½ä»¤æ–¹å¼
 
 
-	void command();    //×ÜÃüÁî
+	void command();    //æ€»å‘½ä»¤
 
 	int AttackWeigh;
 	int DefenseWeigh;
 
-	vector<Tower> unoccupied;           //ÒÑÕ¼ÁìÁĞ±í
-	vector<Tower> occupied;             //Î´Õ¼ÁìÁĞ±í
+	vector<Tower> unoccupied;           //å·²å é¢†åˆ—è¡¨
+	vector<Tower> occupied;             //æœªå é¢†åˆ—è¡¨
 
 
 	Properties* data;
@@ -650,20 +650,20 @@ public:
 };
 
 
-/*************ÀàµÄ¾²Ì¬±äÁ¿µÄ³õÊ¼»¯***************/
+/*************ç±»çš„é™æ€å˜é‡çš„åˆå§‹åŒ–***************/
 int Tower::sum_accessible = 0;
 int Tower::sum_convenience = 0;
 int Tower::sum_danger = 0;
 int Tower::sum_troop_convenience = 0;
 
-/**************Àà¾²Ì¬±äÁ¿³õÊ¼»¯Íê±Ï****************/
+/**************ç±»é™æ€å˜é‡åˆå§‹åŒ–å®Œæ¯•****************/
 
 /*
-»ù±¾µÄËÄ¸öÌí¼ÓÖ¸ÁîµÄÃüÁî
-info.myCommandList.addCommand(Produce,aim_tower_id,HeavyArcher);//Ôì±øÃüÁî£¬µÚ¶ş¸ö²ÎÊıÊÇÔì±øµÄËşid£¬µÚÈı¸öÊÇÔìµÄ±øÖÖ
-info.myCommandList.addCommand(Attack,aim_soldier_id,x_position,y_position);//¹¥»÷ÃüÁî£¬µÚ¶ş¸ö²ÎÊıÊÇ·¢Æğ¹¥»÷µÄÊ¿±øid£¬µÚÈıºÍµÚËÄ¸ö²ÎÊıÊÇÄ¿±êµÄx£¬yÎ»ÖÃ
-info.myCommandList.addCommand(Upgrade,aim_tower_id);//Éı¼¶ÃüÁî£¬µÚ¶ş¸ö²ÎÊıÊÇÓûÉı¼¶µÄËşid
-info.myCommandList.addCommand(Move,aim_soldier_id,UP,distance);//ÒÆ¶¯ÃüÁî£¬µÚ¶ş¸ö²ÎÊıÊÇÓûÒÆ¶¯µÄÊ¿±øid£¬µÚÈı¸ö²ÎÊıÊÇÒÆ¶¯·½Ïò£¬µÚËÄ¸ö²ÎÊıÊÇÒÆ¶¯¾àÀë
+åŸºæœ¬çš„å››ä¸ªæ·»åŠ æŒ‡ä»¤çš„å‘½ä»¤
+info.myCommandList.addCommand(Produce,aim_tower_id,HeavyArcher);//é€ å…µå‘½ä»¤ï¼Œç¬¬äºŒä¸ªå‚æ•°æ˜¯é€ å…µçš„å¡”idï¼Œç¬¬ä¸‰ä¸ªæ˜¯é€ çš„å…µç§
+info.myCommandList.addCommand(Attack,aim_soldier_id,x_position,y_position);//æ”»å‡»å‘½ä»¤ï¼Œç¬¬äºŒä¸ªå‚æ•°æ˜¯å‘èµ·æ”»å‡»çš„å£«å…µidï¼Œç¬¬ä¸‰å’Œç¬¬å››ä¸ªå‚æ•°æ˜¯ç›®æ ‡çš„xï¼Œyä½ç½®
+info.myCommandList.addCommand(Upgrade,aim_tower_id);//å‡çº§å‘½ä»¤ï¼Œç¬¬äºŒä¸ªå‚æ•°æ˜¯æ¬²å‡çº§çš„å¡”id
+info.myCommandList.addCommand(Move,aim_soldier_id,UP,distance);//ç§»åŠ¨å‘½ä»¤ï¼Œç¬¬äºŒä¸ªå‚æ•°æ˜¯æ¬²ç§»åŠ¨çš„å£«å…µidï¼Œç¬¬ä¸‰ä¸ªå‚æ•°æ˜¯ç§»åŠ¨æ–¹å‘ï¼Œç¬¬å››ä¸ªå‚æ•°æ˜¯ç§»åŠ¨è·ç¦»
 */
 void player_ai(Info& info)
 {
@@ -671,10 +671,10 @@ void player_ai(Info& info)
 
 	Properties MyProperties(info);
 
-	//cout << "³õÊ¼»¯Íê³ÉRound" << info.round << endl;
+	//cout << "åˆå§‹åŒ–å®ŒæˆRound" << info.round << endl;
 
 	//cin >> n;
-	//³õÊ¼»¯Íê³É
+	//åˆå§‹åŒ–å®Œæˆ
 	Decision MyDecision(&MyProperties);
 	MyDecision.command();
 	/*
@@ -693,34 +693,34 @@ void player_ai(Info& info)
 	
 }
 
-/***********Enemy³ÉÔ±º¯Êı¶¨Òå************/
+/***********Enemyæˆå‘˜å‡½æ•°å®šä¹‰************/
 
 void Enemy::evaluate() {
 
 }
 
-/*********Enemy³ÉÔ±º¯Êı¶¨Òå½áÊø*******/
+/*********Enemyæˆå‘˜å‡½æ•°å®šä¹‰ç»“æŸ*******/
 
 
-/*************Tower³ÉÔ±º¯Êı¶¨Òå*****************************/
+/*************Toweræˆå‘˜å‡½æ•°å®šä¹‰*****************************/
 
 void Tower::evaluate_danger(vector<Enemy> enemy, vector<Troop> my) {
 	int scan[2][2];
-	//È·¶¨ËÑË÷ÇøÓò
+	//ç¡®å®šæœç´¢åŒºåŸŸ
 	AreaDecision(3, scan, base.x_position, base.y_position);
-	danger = 1;  //³õÊ¼»¯
+	danger = 1;  //åˆå§‹åŒ–
 
 
 	for (unsigned int i = 0; i < enemy.size(); i++) {
 		if (enemy[i].base.x_position >= scan[0][0] && enemy[i].base.x_position <= scan[1][0]
-			&& enemy[i].base.y_position >= scan[0][1] && enemy[i].base.y_position <= scan[1][1]) {  //Èç¹ûµĞÈËÔÚ·¶Î§ÄÚ
+			&& enemy[i].base.y_position >= scan[0][1] && enemy[i].base.y_position <= scan[1][1]) {  //å¦‚æœæ•Œäººåœ¨èŒƒå›´å†…
 			danger += Ability_TSoldierType(enemy[i].base);
 
 		}
 	}
 	for (unsigned int i = 0; i < my.size(); i++) {
 		if (my[i].base.x_position >= scan[0][0] && my[i].base.x_position <= scan[1][0]
-			&& my[i].base.y_position >= scan[0][1] && my[i].base.y_position <= scan[1][1]) {  //Èç¹ûÎÒ·½ÔÚ·¶Î§ÄÚ
+			&& my[i].base.y_position >= scan[0][1] && my[i].base.y_position <= scan[1][1]) {  //å¦‚æœæˆ‘æ–¹åœ¨èŒƒå›´å†…
 			danger -= Ability_TSoldierType(my[i].base);
 
 		}
@@ -805,7 +805,7 @@ unsigned int Tower::basicneed() {
 		return need;
 }
 
-unsigned int Tower::is_dangerous() {  //·µ»ØĞèÒªÊ¿±øÊıÁ¿
+unsigned int Tower::is_dangerous() {  //è¿”å›éœ€è¦å£«å…µæ•°é‡
 	int need = 0;
 	if (inf->round < 35) {
 		if (enemy.size()) {
@@ -843,7 +843,7 @@ void Tower::defense(vector<Troop>& total_troop) {
 	if (this->enemy.size() != 0) {
 		int k = 0;
 		for (unsigned int i = 0; i < mytroop.size(); i++) {
-			if (enemy[k].base.blood <= 0) k++;   //°´Ë³Ğò¹¥»÷
+			if (enemy[k].base.blood <= 0) k++;   //æŒ‰é¡ºåºæ”»å‡»
 
 			if (distance(mytroop[i].base.position, enemy[k].base.position) > mytroop[i].base.range) {
 				mytroop[i].attackplace(enemy[k].base.position);
@@ -887,7 +887,7 @@ void Tower::static_generate() {
 	double normalizer_troop_convenience = Tower::sum_troop_convenience / TOTAL_TOWER;
 	double normalizer_blood = 300;
 
-	//cout <<"ÕıÔò»¯Òò×Ó"<< normalizer_accessible << " " << normalizer_danger << " " << normalizer_convenience;
+	//cout <<"æ­£åˆ™åŒ–å› å­"<< normalizer_accessible << " " << normalizer_danger << " " << normalizer_convenience;
 
 	double weigh_accessible = 1;
 	double weigh_danger = 2;
@@ -899,14 +899,16 @@ void Tower::static_generate() {
 	attack_evaluation = weigh_accessible * accessible / normalizer_accessible + weigh_danger * danger / normalizer_danger + weigh_troop_convenience * troop_convenience / normalizer_troop_convenience + weigh_blood * base.blood / normalizer_blood;
 	product_evaluation = weigh_convenience * convenience / normalizer_convenience;
 
-	//cout << "Ëş" << base.id << "¹¥»÷ÆÀ¹À:" << attack_evaluation << endl;
+	if(base.id==8)
+		attack_evaluation += 10;
+	//cout << "å¡”" << base.id << "æ”»å‡»è¯„ä¼°:" << attack_evaluation << endl;
 
 }
 
-/*************Tower³ÉÔ±º¯Êı¶¨Òå½áÊø*****************************/
+/*************Toweræˆå‘˜å‡½æ•°å®šä¹‰ç»“æŸ*****************************/
 
 
-/*************Troop³ÉÔ±º¯Êı¶¨Òå*************/
+/*************Troopæˆå‘˜å‡½æ•°å®šä¹‰*************/
 
 
 void Troop::move(int length) {
@@ -1034,7 +1036,7 @@ void Troop::search(int length, int type) {
 }
 
 void Troop::investigation() {
-	//»ñÈ¡ÖÜÎ§ÊÓÒ°
+	//è·å–å‘¨å›´è§†é‡
 	for (int i = 0; i < view_length; i++) {
 		for (int j = 0; j < view_length; j++) {
 			if (flag(point[0] + i, point[1] + j))
@@ -1043,9 +1045,9 @@ void Troop::investigation() {
 				detail[i][j] = -1;
 			if (detail[i][j] == 1) {
 				int soldier_id = inf->pointInfo[point[0] + i][point[1] + j].soldier;
-				//±éÀúÑ°ÕÒËùÕ¼Ê¿±ø
+				//éå†å¯»æ‰¾æ‰€å å£«å…µ
 				for (unsigned int k = 0; k < inf->soldierInfo.size(); k++) {
-					if (inf->soldierInfo[k].id == soldier_id) {  //ÕÒµ½Ê¿±ø
+					if (inf->soldierInfo[k].id == soldier_id) {  //æ‰¾åˆ°å£«å…µ
 
 						if (inf->soldierInfo[k].owner == current_id) {
 							this->mytroop.push_back(Troop(inf->soldierInfo[k], k));
@@ -1247,7 +1249,7 @@ void Troop::go() {
 }
 
 void Troop::step_go(int x, int y) {
-	if (distance(x, y, current_position[0], current_position[1]) != 1) {  //·¢Éú´íÎó
+	if (distance(x, y, current_position[0], current_position[1]) != 1) {  //å‘ç”Ÿé”™è¯¯
 		return;
 	}
 	if (current_position[0] != x) {
@@ -1358,7 +1360,7 @@ void Troop::defense(int towerid) {
 		//cout << "Check 4.X.X.3" << endl;
 	}
 	else {
-		//cout << "Ê¿±ø" << base.id << "±»ËşÕ¼ÓÃ£¬²»ÄÜ½øĞĞ»Ø·À" << endl;
+		//cout << "å£«å…µ" << base.id << "è¢«å¡”å ç”¨ï¼Œä¸èƒ½è¿›è¡Œå›é˜²" << endl;
 	}
 	//cout << "Check 4.X.X.end" << endl;
 }
@@ -1368,14 +1370,14 @@ void Troop::act() {
 
 }
 
-/*************Troop³ÉÔ±º¯Êı¶¨Òå½áÊø*************/
+/*************Troopæˆå‘˜å‡½æ•°å®šä¹‰ç»“æŸ*************/
 
 
 
-/**************Decision³ÉÔ±º¯Êı¶¨Òå*******************/
+/**************Decisionæˆå‘˜å‡½æ•°å®šä¹‰*******************/
 
-int Decision::findorigin(int soldierid) {  //Í¨¹ıÊ¿±øidÕÒµ½ÎÒµÄÊ¿±øµÄÏÂ±ê
-	int returnid = -1;                             //Ô½½ç¾¯¸æ
+int Decision::findorigin(int soldierid) {  //é€šè¿‡å£«å…µidæ‰¾åˆ°æˆ‘çš„å£«å…µçš„ä¸‹æ ‡
+	int returnid = -1;                             //è¶Šç•Œè­¦å‘Š
 	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
 		if (data->MyTroop[i].base.id == soldierid)
 		{
@@ -1421,7 +1423,7 @@ void Decision::defense() {
 
 	//cout << "Check 4.1" << endl;
 	bool flag = true;
-	if (get_duty_num(DEFENSE) > 0) {  //ÅĞ¶ÏÊÇ·ñ´ïµ½Ä¿±ê
+	if (get_duty_num(DEFENSE) > 0) {  //åˆ¤æ–­æ˜¯å¦è¾¾åˆ°ç›®æ ‡
 		for (unsigned int i = 0; i < occupied.size(); i++) {
 			if (inf->round <= 50) {
 				if (occupied[i].mytroop.size() - occupied[i].enemy.size() < 0) {
@@ -1429,12 +1431,12 @@ void Decision::defense() {
 				}
 			}
 			else {
-				if (occupied[i].mytroop.size() - occupied[i].enemy.size() < 1) { //ÎÒ·½Ê¿±ø±ÈµĞ·½Ê¿±ø¶àÒ»¸ö
+				if (occupied[i].mytroop.size() - occupied[i].enemy.size() < 1) { //æˆ‘æ–¹å£«å…µæ¯”æ•Œæ–¹å£«å…µå¤šä¸€ä¸ª
 					flag = false;
 				}
 			}
 		}
-		if (flag) {  //Èç¹ûÒÑ¾­°²È«£¬Ä¨È¥ËùÓĞ·ÀÓù±ê¼Ç
+		if (flag) {  //å¦‚æœå·²ç»å®‰å…¨ï¼ŒæŠ¹å»æ‰€æœ‰é˜²å¾¡æ ‡è®°
 			setfree(DEFENSE);
 		}
 	}
@@ -1463,14 +1465,14 @@ void Decision::defense() {
 	
 	//cout << "Check 4.4" << endl;
 
-	if (current_defense_tower.size()) {    //Èç¹ûÓĞĞèÒª»Ø·ÀµÄ±øËş
+	if (current_defense_tower.size()) {    //å¦‚æœæœ‰éœ€è¦å›é˜²çš„å…µå¡”
 
 		if (get_duty_num(DEFENSE)) {
 			for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
 				//cout << "Check 4.1.1." << i << endl;
-				data->MyTroop[i].defense(current_defense_tower[0]);             //ÔİÊ±Ö»ÓÅÏÈ»Ø·ÀÒ»¸öËş
-				//cout << "µ±Ç°¼ÈÓĞ»Ø·ÀÊ¿±ø" << findorigin(DefenseSoldier[0]) << endl;
-				//cout << "×Ü»Ø·ÀÊ¿±ø" << DefenseSoldier.size() << endl;
+				data->MyTroop[i].defense(current_defense_tower[0]);             //æš‚æ—¶åªä¼˜å…ˆå›é˜²ä¸€ä¸ªå¡”
+				//cout << "å½“å‰æ—¢æœ‰å›é˜²å£«å…µ" << findorigin(DefenseSoldier[0]) << endl;
+				//cout << "æ€»å›é˜²å£«å…µ" << DefenseSoldier.size() << endl;
 			}
 		}
 
@@ -1479,14 +1481,14 @@ void Decision::defense() {
 		//bool find_free_soldier_flag = false;
 		bool safe_flag = false;
 
-		vector<Pair> id_distance;   //index´¢´æÊ¿±øid£¬value´¢´æ¾àÀë
-		for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //ÕÒµ½ÁãÉ¢Ê¿±øÈÃÆä»Ø·À,´¢´æÔÚid_distanceÄÚ
+		vector<Pair> id_distance;   //indexå‚¨å­˜å£«å…µidï¼Œvalueå‚¨å­˜è·ç¦»
+		for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //æ‰¾åˆ°é›¶æ•£å£«å…µè®©å…¶å›é˜²,å‚¨å­˜åœ¨id_distanceå†…
 			if (data->MyTroop[i].duty == FREE) {
 				id_distance.push_back(Pair(data->MyTroop[i].base.id,
 					distance(data->MyTroop[i].base.position, data->TowerInf[current_defense_tower[0]].base.position)));
 
 				//find_free_soldier_flag = true;
-				//cout << "ÁãÉ¢Ê¿±ø" << MyTroop[i].base.id << "³ö·¢»Ø·À" << endl;
+				//cout << "é›¶æ•£å£«å…µ" << MyTroop[i].base.id << "å‡ºå‘å›é˜²" << endl;
 
 			}
 		}
@@ -1495,9 +1497,9 @@ void Decision::defense() {
 		//cout << "Check 4.6" << endl;
 
 		for (unsigned int i = 0; i < id_distance.size() && get_duty_num(DEFENSE)<sum_soldier_need; i++) {
-			data->MyTroop[findorigin(id_distance[i].index)].duty = DEFENSE;  //×ÔÓÉÊ¿±ø·ÀÊØ
+			data->MyTroop[findorigin(id_distance[i].index)].duty = DEFENSE;  //è‡ªç”±å£«å…µé˜²å®ˆ
 
-			data->MyTroop[findorigin(id_distance[i].index)].defense(current_defense_tower[0]);     //ÔİÊ±Ö»·ÀÊØÒ»×ùËş
+			data->MyTroop[findorigin(id_distance[i].index)].defense(current_defense_tower[0]);     //æš‚æ—¶åªé˜²å®ˆä¸€åº§å¡”
 			if (get_duty_num(DEFENSE) >= sum_soldier_need) {
 				safe_flag = true;
 				break;
@@ -1519,16 +1521,16 @@ void Decision::attack() {
 	if (current_attack_tower.size() == 0)
 		return;
 
-	if (last_attack_tower != current_attack_tower[0]) {  //Èç¹û¸ü»»ÁË¹¥»÷Ä¿±ê£¬¿ÉÄÜÊÇËşÒÑ¾­±»¹¥¿Ë£¬Ö¤Ã÷ĞèÒªÖØĞÂ¹æ»®
+	if (last_attack_tower != current_attack_tower[0]) {  //å¦‚æœæ›´æ¢äº†æ”»å‡»ç›®æ ‡ï¼Œå¯èƒ½æ˜¯å¡”å·²ç»è¢«æ”»å…‹ï¼Œè¯æ˜éœ€è¦é‡æ–°è§„åˆ’
 
-														 //cout << "¸ü»»¹¥»÷Ëş£¬Çå¿Õ¹¥»÷Ê¿±øÁĞ±í" << endl;
+														 //cout << "æ›´æ¢æ”»å‡»å¡”ï¼Œæ¸…ç©ºæ”»å‡»å£«å…µåˆ—è¡¨" << endl;
 		setfree(ATTACK);
 
-		last_attack_tower = current_attack_tower[0];   //±»ÖØĞÂ¸³Öµ
+		last_attack_tower = current_attack_tower[0];   //è¢«é‡æ–°èµ‹å€¼
 	}
 
 	///cout << endl;
-	///cout << "ÎÒ·½Ê¿±øÊıÁ¿" << inf->playerInfo[current_id].soldier_num << " ÊıÁ¿³¬¹ı´ËÊıÁ¿Æô¶¯¹¥»÷" << inf->playerInfo[current_id].tower_num + 1 + DefenseSoldier.size() << endl;
+	///cout << "æˆ‘æ–¹å£«å…µæ•°é‡" << inf->playerInfo[current_id].soldier_num << " æ•°é‡è¶…è¿‡æ­¤æ•°é‡å¯åŠ¨æ”»å‡»" << inf->playerInfo[current_id].tower_num + 1 + DefenseSoldier.size() << endl;
 
 	bool attack_flag = true;
 
@@ -1536,13 +1538,13 @@ void Decision::attack() {
 			
 
 
-		//È·¶¨ºÃtagºó£¬ÕÒµ½×ÔÓÉÊ¿±ø½øĞĞ¹¥»÷
+		//ç¡®å®šå¥½tagåï¼Œæ‰¾åˆ°è‡ªç”±å£«å…µè¿›è¡Œæ”»å‡»
 
-		for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //ÕÒµ½ÁãÉ¢Ê¿±øÈÃÆä¹¥»÷
+		for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //æ‰¾åˆ°é›¶æ•£å£«å…µè®©å…¶æ”»å‡»
 			if (data->MyTroop[i].duty == FREE) {
 				data->MyTroop[i].duty = ATTACK;
 				data->MyTroop[i].attack();
-				///cout << "ÁãÉ¢Ê¿±ø" << i << "³ö·¢¹¥»÷" << endl;
+				///cout << "é›¶æ•£å£«å…µ" << i << "å‡ºå‘æ”»å‡»" << endl;
 			}
 		}
 
@@ -1558,21 +1560,21 @@ void Decision::clean() {
 
 void Decision::analyse_tower() {
 
-	//¼¤»îÆÀ¹Àº¯Êı½øĞĞ²ÎÊı¼ÆËã£¬µ«²»½øĞĞÈÎºÎ¶¯×÷
+	//æ¿€æ´»è¯„ä¼°å‡½æ•°è¿›è¡Œå‚æ•°è®¡ç®—ï¼Œä½†ä¸è¿›è¡Œä»»ä½•åŠ¨ä½œ
 
-	for (unsigned int i = 0; i < TOTAL_TOWER; i++) { //Ç³¼¤»î
+	for (unsigned int i = 0; i < TOTAL_TOWER; i++) { //æµ…æ¿€æ´»
 		data->TowerInf[i].evaluate(data->EnemyTroop, data->MyTroop);
 	}
-	for (unsigned int i = 0; i < TOTAL_TOWER; i++) {       //Éî¼¤»î
+	for (unsigned int i = 0; i < TOTAL_TOWER; i++) {       //æ·±æ¿€æ´»
 		data->TowerInf[i].static_generate();
 	}
 
-	//¼¤»îËşÔì±øÏà¹ØÖ¸±ê.....
+	//æ¿€æ´»å¡”é€ å…µç›¸å…³æŒ‡æ ‡.....
 
 
-	//²ÎÊı¼ÆËãºÃÖ®ºó£¬½«Ëş´¢´æÔÚĞÂµÄÁĞ±íÀïÓÃÓÚËş¿ØÖÆ±øµÄ¾ö²ßÒÔ¼°ËşµÄ¾ö²ß
+	//å‚æ•°è®¡ç®—å¥½ä¹‹åï¼Œå°†å¡”å‚¨å­˜åœ¨æ–°çš„åˆ—è¡¨é‡Œç”¨äºå¡”æ§åˆ¶å…µçš„å†³ç­–ä»¥åŠå¡”çš„å†³ç­–
 
-	for (unsigned int i = 0; i < TOTAL_TOWER; i++) {       //½«½á¹û·Ö¿ª
+	for (unsigned int i = 0; i < TOTAL_TOWER; i++) {       //å°†ç»“æœåˆ†å¼€
 		if (data->TowerInf[i].base.owner != current_id) {
 			unoccupied.push_back(data->TowerInf[i]);
 		}
@@ -1582,16 +1584,16 @@ void Decision::analyse_tower() {
 	}
 
 	sort(unoccupied.begin(), unoccupied.end(), attack_evaluate);
-	//ÅÅĞò½áÊø
+	//æ’åºç»“æŸ
 
-	///cout << "¿ªÊ¼ÅÅĞò" << endl;
+	///cout << "å¼€å§‹æ’åº" << endl;
 	for (unsigned int i = 0; i < unoccupied.size(); i++) {
 		//cout << unoccupied[i].base.id << " ";
 	}
 
-	//Ñ¡³ö¹¥»÷Ëş
+	//é€‰å‡ºæ”»å‡»å¡”
 
-	unsigned int current_attack_tower_iter = 0;     //´æ´¢¹¥»÷ËşµÄµü´úÆ÷
+	unsigned int current_attack_tower_iter = 0;     //å­˜å‚¨æ”»å‡»å¡”çš„è¿­ä»£å™¨
 	for (; current_attack_tower_iter < unoccupied.size(); current_attack_tower_iter++) {
 		current_attack_tower.push_back(unoccupied[current_attack_tower_iter].base.id);
 	}
@@ -1600,7 +1602,7 @@ void Decision::analyse_tower() {
 }
 
 void Decision::analyse_troop() {
-	//¼¤»îÊ¿±ø£¬½øĞĞ¶ş´Î³õÊ¼»¯
+	//æ¿€æ´»å£«å…µï¼Œè¿›è¡ŒäºŒæ¬¡åˆå§‹åŒ–
 	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
 		data->MyTroop[i].evaluate();
 	}
@@ -1608,7 +1610,7 @@ void Decision::analyse_troop() {
 }
 
 
-void Decision::product() { //Éú²ú£¬ĞèÀûÓÃgenerateºóµÄÊı¾İ
+void Decision::product() { //ç”Ÿäº§ï¼Œéœ€åˆ©ç”¨generateåçš„æ•°æ®
 	int Soldier_resourse[8] = { 0,40,40,50,70,55,60,70 };
 	int* propotion;
 	if (data->MyTroop.size() < DIVISION_OF_SOLDIER_PROPOTION)
@@ -1618,9 +1620,9 @@ void Decision::product() { //Éú²ú£¬ĞèÀûÓÃgenerateºóµÄÊı¾İ
 
 	if (true) {
 		double cos_cost[NUM_KINDS_SOLDIER] = { 0 };
-		for (int i = 1; i < NUM_KINDS_SOLDIER; i++) {  //ÅĞ¶ÏÓëÄ¿±êµÄ¼Ğ½Ç
+		for (int i = 1; i < NUM_KINDS_SOLDIER; i++) {  //åˆ¤æ–­ä¸ç›®æ ‡çš„å¤¹è§’
 			int temp_Decision[NUM_KINDS_SOLDIER] = { 0 };
-			for (int j = 0; j < NUM_KINDS_SOLDIER; j++)    //¸´ÖÆÊı×é
+			for (int j = 0; j < NUM_KINDS_SOLDIER; j++)    //å¤åˆ¶æ•°ç»„
 			{
 				temp_Decision[j] = SoldierNum[j];
 				if (j == i) {
@@ -1634,7 +1636,7 @@ void Decision::product() { //Éú²ú£¬ĞèÀûÓÃgenerateºóµÄÊı¾İ
 		for (int i = 1; i < NUM_KINDS_SOLDIER; i++)
 		{
 			double temp_cost = 1 - cos_cost[i];
-			if (temp_cost < mincost) {       //¼ÇÂ¼´ú¼Ûº¯Êı×îĞ¡Öµ¼°ÏÂ±ê
+			if (temp_cost < mincost) {       //è®°å½•ä»£ä»·å‡½æ•°æœ€å°å€¼åŠä¸‹æ ‡
 				mincost = temp_cost;
 				argmin = i;
 			}
@@ -1643,9 +1645,9 @@ void Decision::product() { //Éú²ú£¬ĞèÀûÓÃgenerateºóµÄÊı¾İ
 
 		sort(occupied.begin(), occupied.end(), product_evaluate);
 
-		if (CurrentState != NUM_KINDS_SOLDIER) {       //È·¶¨Ôì±ø
+		if (CurrentState != NUM_KINDS_SOLDIER) {       //ç¡®å®šé€ å…µ
 			CurrentState = argmin;
-			//Èç¹û×ÊÔ´ÔÊĞí£¬¿ªÊ¼Ôì±ø
+			//å¦‚æœèµ„æºå…è®¸ï¼Œå¼€å§‹é€ å…µ
 			//cout << CurrentState << endl;
 			for (unsigned int i = 0; i < occupied.size(); i++) {
 				if (occupied[i].base.recruiting == false) {
@@ -1658,7 +1660,7 @@ void Decision::product() { //Éú²ú£¬ĞèÀûÓÃgenerateºóµÄÊı¾İ
 		}
 	}
 
-	//Éı¼¶Ëş
+	//å‡çº§å¡”
 
 	int upgrade_signal[UPGRADE_POINT][2] = {
 		{ 6,0 },{ 9,0 },{ 12,0 },{ 15,0 },{ 20,0 },{ 100,0 }
@@ -1688,15 +1690,15 @@ void Decision::product() { //Éú²ú£¬ĞèÀûÓÃgenerateºóµÄÊı¾İ
 		}
 
 		if (SoldierSum == upgrade_at_soldiernum && !FullFlag) {
-			CurrentState = NUM_KINDS_SOLDIER;  //ÖÃÓÚÉı¼¶×´Ì¬
+			CurrentState = NUM_KINDS_SOLDIER;  //ç½®äºå‡çº§çŠ¶æ€
 		}
 		if (CurrentState == NUM_KINDS_SOLDIER) {
 			for (unsigned int i = 0; i < occupied.size(); i++) {
 				if (occupied[i].base.level < 3) {
-					if (inf->playerInfo[current_id].resource >= Tower_resource[occupied[i].base.level]) {  //Ö»Òª´æÔÚÒ»¸öËş¿ÉÒÔÉı¼¶£¬ÄÇÃ´¾ÍÉı¼¶
+					if (inf->playerInfo[current_id].resource >= Tower_resource[occupied[i].base.level]) {  //åªè¦å­˜åœ¨ä¸€ä¸ªå¡”å¯ä»¥å‡çº§ï¼Œé‚£ä¹ˆå°±å‡çº§
 						inf->myCommandList.addCommand(Upgrade, occupied[i].base.id);
 
-						///cout << "±øÎª5µÄ±¶Êı£¬¿ªÊ¼Éı¼¶Ëş" << endl;
+						///cout << "å…µä¸º5çš„å€æ•°ï¼Œå¼€å§‹å‡çº§å¡”" << endl;
 
 						for (int i = 0; i < UPGRADE_POINT; i++) {
 							if (upgrade_signal[i][1] == 0) {
@@ -1723,7 +1725,7 @@ void Decision::command_tower() {
 	}
 	for (unsigned int i = 0; i < occupied.size(); i++)
 	{
-		//ÓĞµĞÈËÆô¶¯·ÀÓù
+		//æœ‰æ•Œäººå¯åŠ¨é˜²å¾¡
 
 		occupied[i].defense(data->MyTroop);
 
@@ -1746,10 +1748,10 @@ void Decision::command_troop() {
 
 void Decision::shortterm() {
 
-	//²Ù×÷Ëş£º
+	//æ“ä½œå¡”ï¼š
 	if (index[0] == 0) {
 		inf->myCommandList.addCommand(Produce, occupied[0].base.id, LightKnight); index[0] = 1;
-	}//²Ù×÷0£ºËş1ÔìÇáÆï±ø
+	}//æ“ä½œ0ï¼šå¡”1é€ è½»éª‘å…µ
 	bool available = !occupied[0].base.recruiting
 		&& inf->playerInfo[current_id].population < inf->playerInfo[current_id].max_population;
 
@@ -1757,19 +1759,19 @@ void Decision::shortterm() {
 
 
 	if (index[0] == 1 && available && index[1] == 0 && inf->round != 0) {
-		//cout << "×¼±¸ÔìµÚ¶ş¸öÇáÆï±ø" << endl;
+		//cout << "å‡†å¤‡é€ ç¬¬äºŒä¸ªè½»éª‘å…µ" << endl;
 		inf->myCommandList.addCommand(Produce, occupied[0].base.id, LightKnight); index[1] = 1;
 
-	}//²Ù×÷1£ºËş1ÔìÇáÆï±ø
+	}//æ“ä½œ1ï¼šå¡”1é€ è½»éª‘å…µ
 
 	if (inf->playerInfo[current_id].resource >= 80 && index[2] == 0 && index[1] == 1) {
 		inf->myCommandList.addCommand(Upgrade, occupied[0].base.id); index[2] = 1;
-	}//²Ù×÷2£ºËş1Éı¼¶
+	}//æ“ä½œ2ï¼šå¡”1å‡çº§
 
 	 //******************************//
 	if (occupied[0].base.level == 1 && index[3] == 1 && inf->playerInfo[current_id].resource >= 70 && index[4] == 0) {
 		inf->myCommandList.addCommand(Produce, occupied[0].base.id, HeavyKnight);  index[4] = 1;
-	}//²Ù×÷4£ºËş1ÔìÖØÆï±ø
+	}//æ“ä½œ4ï¼šå¡”1é€ é‡éª‘å…µ
 
 
 	int first_troop;
@@ -1791,12 +1793,12 @@ void Decision::shortterm() {
 		}
 
 
-	}//²Ù×÷6£ºÒÆ¶¯ÇáÆï±ø1Õ¼Ëş2
+	}//æ“ä½œ6ï¼šç§»åŠ¨è½»éª‘å…µ1å å¡”2
 
 	if (index[6] == 1 && index[7] == 0) {
 		if (inf->playerInfo[current_id].tower_num != 2) data->MyTroop[0].gettower();
-		if (inf->playerInfo[current_id].tower_num == 2) index[7] = 1;   //Ôì³öµÚ¶ş¸öËş
-	}//²Ù×÷7£ºÇáÆï±ø1´òËş2
+		if (inf->playerInfo[current_id].tower_num == 2) index[7] = 1;   //é€ å‡ºç¬¬äºŒä¸ªå¡”
+	}//æ“ä½œ7ï¼šè½»éª‘å…µ1æ‰“å¡”2
 
 	if (inf->playerInfo[current_id].soldier_num>1 && index[11] == 0) {
 		int n = occupied[0].base.id + 1;
@@ -1805,17 +1807,17 @@ void Decision::shortterm() {
 		second_troop = data->MyTroop[1].base.id;
 		if (distance(inf->soldierInfo[second_troop].x_position, inf->soldierInfo[second_troop].y_position, data->MyTroop[1].place[0], data->MyTroop[1].place[1]) == 0)
 			index[11] = 1;
-	}//²Ù×÷6£ºÒÆ¶¯ÇáÆï±ø2Õ¼Ëş2
+	}//æ“ä½œ6ï¼šç§»åŠ¨è½»éª‘å…µ2å å¡”2
 
 	if (index[11] == 1 && index[12] == 0) {
 		if (inf->playerInfo[current_id].tower_num != 2) data->MyTroop[1].gettower();
 		if (inf->playerInfo[current_id].tower_num == 2) index[12] = 1;
-	}//²Ù×÷7£ºÇáÆï±ø2´òËş2
+	}//æ“ä½œ7ï¼šè½»éª‘å…µ2æ‰“å¡”2
 
 }
 
 void Decision::command() {
-	//²úÉúPropertiesÖĞµÄ¾ö²ßÖ¸±ê
+	//äº§ç”ŸPropertiesä¸­çš„å†³ç­–æŒ‡æ ‡
 	for (unsigned int i = 0; current_attack_tower.size() > 0; i++) {
 		current_attack_tower.pop_back();
 	}
@@ -1826,7 +1828,7 @@ void Decision::command() {
 	analyse_tower();
 	analyse_troop();
 	//cout << "check 1" << endl;
-	command_tower(); //ÏòËş´«´ïÖ¸Áî	
+	command_tower(); //å‘å¡”ä¼ è¾¾æŒ‡ä»¤	
 	//cout << "check 2" << endl;
 
 	//cout << "check 3" << endl;
@@ -1855,7 +1857,7 @@ void Decision::command() {
 		shortterm();
 	}
 
-	command_troop();  //Ïò±ø´«´ïÖ¸Áî
+	command_troop();  //å‘å…µä¼ è¾¾æŒ‡ä»¤
 	product();
 
 
@@ -1863,4 +1865,4 @@ void Decision::command() {
 
 
 
-/**************Decision³ÉÔ±º¯Êı¶¨Òå½áÊø*******************/
+/**************Decisionæˆå‘˜å‡½æ•°å®šä¹‰ç»“æŸ*******************/
