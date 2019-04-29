@@ -1394,7 +1394,7 @@ void Troop::attack() {
 				defeat_round = total_my_blood / (total_enemy_attack - total_my_armor);
 			}
 			if (total_my_attack - total_enemy_armor > 0) {
-				victory_round = total_enemy_blood / (total_my_attack - total_enemy_blood);
+				victory_round = total_enemy_blood / (total_my_attack - total_enemy_armor);
 			}
 
 			if (defeat_round <= 0.67*victory_round)       //我方有优势时，优先打附近的兵
