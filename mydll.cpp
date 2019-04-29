@@ -13,23 +13,28 @@ using namespace std;
 #define NUM_KINDS_SOLDIER 8
 #define UPGRADE_POINT 6
 #define COMMAND_LENGTH 2
-#define DIVISION_OF_SOLDIER_PROPOTION 8
+#define DIVISION_OF_SOLDIER_PROPOTION 4
+#define ALLOWABLE_ERROR_PROPOTION 1.5
 
-enum ControlState {
-	TOWER, DECISION
+enum GameState{SHORT_TERM, TOWER_ATTACK, SOLDIER_ATTACK, DEVLEOPING, GS_DEFENSE, GS_SURVIVAL};
+
+enum State {
+	FREE, TOWER_DEFENSE, DEFENSE, ATTACK
 };
 
 /************全局储存变量***********/
 
 unsigned int CurrentState = 0;    //当前生产状态，小于NUM_KINDS_SOLDIER时为士兵，等于NUM_KINDS_SOLDIER时为升级塔
 int propotion_short[NUM_KINDS_SOLDIER] = { 0,0,1,3,0,0,1,0 };    //初期造兵造兵比例
-int propotion_long[NUM_KINDS_SOLDIER] = { 0,0,1,2,0,1,1,1 };    //初期造兵造兵比例
+int propotion_long[NUM_KINDS_SOLDIER] = { 0,0,1,1,0,3,2,1 };    //后期造兵造兵比例
 
 int current_id;
-int current_attack_tower[TOTAL_TOWER];
+vector<int> current_attack_tower;
+
 bool first_tower_flag = true;
 int last_attack_tower;  //记录上一个攻击的塔
-int current_defense_tower;
+
+vector<int> current_defense_tower;
 
 int MyTowerID[TOTAL_TOWER];    //存储我方塔ID
 int N_MyTowerID[TOTAL_TOWER];      //存储未占领塔ID
@@ -37,8 +42,6 @@ int SoldierNum[NUM_KINDS_SOLDIER] = { 0, };           //记录各种士兵的数
 
 static int index[100] = { 0, };      //短期指令执行情况
 
-vector<int> AttackSoldier;       //记录用于攻击的soldierid
-vector<int> DefenseSoldier;       //记录用于防御的soldierid
 
 int n;         //测试flag
 
@@ -157,8 +160,8 @@ int Ability_TSoldierType(TSoldier s) {  //对某个场上士兵的评估
 class Pair {
 
 public:
-	Pair(int index, int value):index(index),value(value){}
-	Pair(){}
+	Pair(int index, int value) :index(index), value(value) {}
+	Pair() {}
 	int index;
 	int value;
 
@@ -170,8 +173,8 @@ bool value(const Pair& p1, const Pair& p2) {
 
 class MapUnit {
 public:
-	MapUnit(){}
-	MapUnit(TPoint t){
+	MapUnit() {}
+	MapUnit(TPoint t) {
 		x = t.x;
 		y = t.y;
 	}
@@ -194,7 +197,7 @@ public:
 
 class Map {
 public:
-	Map(){}
+	Map() {}
 	Map(TPoint center, int radius = 7) {
 		int scan[2][2];
 		AreaDecision(radius, scan, center.x, center.y);
@@ -203,10 +206,10 @@ public:
 
 	}
 
-	void initialize(){}
-	void route(int a, int b, int x, int y){}
+	void initialize() {}
+	void route(int a, int b, int x, int y) {}
 
-	void Dijistra(){}
+	void Dijistra() {}
 
 	vector<MapUnit> map;
 	vector<MapUnit> result;
@@ -250,6 +253,7 @@ public:
 		index = index_soldierinfo;
 		view_length = data_soldier[base.type][4];
 		length = inf->soldierInfo[index].move_left;  //行动力
+		duty = FREE;
 
 		point[0] = base.x_position - (view_length - 1) / 2;
 		point[1] = base.y_position - (view_length - 1) / 2;
@@ -262,7 +266,7 @@ public:
 		}
 		place[0] = base.x_position;
 		place[1] = base.y_position;
-				
+
 		current_position[0] = base.x_position;
 		current_position[1] = base.y_position;
 
@@ -273,7 +277,7 @@ public:
 
 		length = t.length;
 		view_length = t.view_length;
-
+		duty = t.duty;
 
 		tag = t.tag;
 		signal = t.signal;
@@ -331,14 +335,17 @@ public:
 
 	void step_go(int x, int y);
 	void map_go(Map&);
-	
+
 	void investigation();  //视野内侦查
 
 	void evaluate();  //总评估
 	void clean();
 	void clean(int a);
+
+	bool change_duty(State s);
 	void march();
-	void attack();    //四种指令
+	void attack();    //攻击当前攻击塔
+	void attack(int soldierid);   //攻击某士兵
 	void defense(int towerid);
 
 	void act();    //总行动
@@ -351,6 +358,7 @@ public:
 	int view_length;         //视野边长
 	int length;              //行动力
 
+	State duty;
 
 	int attack_possibility;      //攻击可能性
 	int defense_need;            //防守需要
@@ -362,7 +370,7 @@ public:
 	int delta[4];      //坐标更新量
 
 	int current_position[2];
-	
+
 	int detail[11][11]; //记录每个点的占据情况
 	int point[2];        //视野左下角坐标
 
@@ -378,6 +386,21 @@ public:
 
 
 
+};
+
+class Troops {
+	Troops() {}
+	Troops(Troop& t) {
+		Trooplist.push_back(t);
+	}
+	Troops(vector<Troop> troops){
+		Trooplist = troops;
+	}
+
+	int size() { return Trooplist.size(); }
+
+
+	vector<Troop> Trooplist;
 };
 
 class Tower {                //对塔的评估
@@ -442,6 +465,7 @@ public:
 
 		attack_evaluation = t.attack_evaluation;
 		product_evaluation = t.product_evaluation;
+	
 
 		for (int i = 0; i < 11; i++) {
 			for (int j = 0; j < 11; j++) {
@@ -468,6 +492,9 @@ public:
 	void evaluate_troop_convenience(vector<Troop> my);      //用到我方士兵距离之和评价的便利度
 	void evaluate_all(vector<Enemy> enemy, vector<Troop> my);   //评估函数
 
+	unsigned int basicneed();
+	unsigned int is_dangerous();
+
 	void defense(vector<Troop>& total_troop);
 	void evaluate(vector<Enemy> enemy, vector<Troop> my);   //两种指令
 
@@ -491,6 +518,8 @@ public:
 	int convenience;          //攻塔便利度
 	int troop_convenience;         //攻塔便利度，用士兵距离之和衡量
 
+	int soldierneed = 0;
+
 								   /*******外部修改区*****/
 	double attack_evaluation;   //可攻击性评估，越小越容易
 	double product_evaluation;   //生产性评估，越小越方便
@@ -510,6 +539,10 @@ bool product_evaluate(const Tower t1, const Tower& t2) {
 	return t1.product_evaluation < t2.product_evaluation;
 }
 
+bool high_danger(const Tower& t1, const Tower& t2) {
+	return t1.danger > t2.danger;
+}
+
 class Properties {  //我方属性
 public:
 
@@ -524,11 +557,11 @@ public:
 
 		for (int i = 0; i < 4; i++) {               //获取各方属性信息
 			if (info.playerInfo[i].id == my_id) {
-				attack = info.playerInfo[i].population * 10 + info.playerInfo[i].tower_num * 50 + info.playerInfo[i].resource * 1;
-				EnemyEvaluation[i] = -1;
+				attack = info.playerInfo[i].population * 10 + info.playerInfo[i].tower_num * 50;
+				EnemyEvaluation[i] = info.playerInfo[i].population + info.playerInfo[i].kill_num * 5;
 			}
 			else {
-				EnemyEvaluation[i] = info.playerInfo[i].population * 10 + info.playerInfo[i].tower_num * 50 + info.playerInfo[i].resource * 1;
+				EnemyEvaluation[i] = info.playerInfo[i].population + info.playerInfo[i].kill_num * 5;
 			}
 		}
 
@@ -605,9 +638,9 @@ public:
 	int findorigin(int soldierid);  //通过士兵id找到我的士兵的下标
 	bool in_list(int id, vector<int> v);         //判断id是否在列表v中
 
-	void shortterm();
-
-
+	
+	int get_duty_num(State s);   //获取s状态的士兵总数
+	void setfree(State s);
 
 	void analyse_tower();
 	void analyse_troop();
@@ -620,11 +653,20 @@ public:
 	void defense();
 	void attack();    //三种命令方式
 
+	void get_gamestate();
+
+	void shortterm();
+	void develop();
+	void tower_attack();
+	void soldier_attack();
+	void gs_defense();
 
 	void command();    //总命令
 
 	int AttackWeigh;
 	int DefenseWeigh;
+
+	GameState gamestate;
 
 	vector<Tower> unoccupied;           //已占领列表
 	vector<Tower> occupied;             //未占领列表
@@ -663,7 +705,8 @@ void player_ai(Info& info)
 	//初始化完成
 	Decision MyDecision(&MyProperties);
 	MyDecision.command();
-	/*cout << "Attacksoldier" << AttackSoldier.size() << " DefenseSoldier" << DefenseSoldier.size() << endl;
+	/*
+	cout << "Attacksoldier" << AttackSoldier.size() << " DefenseSoldier" << DefenseSoldier.size() << endl;
 	for (unsigned int i = 0; i < AttackSoldier.size(); i++) {
 		cout << AttackSoldier[i] << " ";
 	}
@@ -671,9 +714,11 @@ void player_ai(Info& info)
 	for (unsigned int i = 0; i < DefenseSoldier.size(); i++) {
 		cout << DefenseSoldier[i] << " ";
 	}
-	cout << endl;*/
+	cout << endl;
+	*/
 	//cout << "Round " << info.round << " end." << endl << endl;
 	//cin >> n;
+	
 }
 
 /***********Enemy成员函数定义************/
@@ -756,6 +801,71 @@ void Tower::evaluate_all(vector<Enemy> enemy, vector<Troop> my) {
 
 }
 
+unsigned int Tower::basicneed() {
+	int need = 0;
+	if (inf->round < 35) {
+		if (enemy.size()) {
+			need = enemy.size() + 1;
+		}
+		else {
+			need = 0;
+		}
+	}
+	else {
+		if (enemy.size()) {
+			need = enemy.size() + 2;
+		}
+		else {
+			if (base.id == 0 || base.id == 6 || base.id == 4 || base.id == 2) {
+				need = 0;
+			}
+			else if (base.id == 1 || base.id == 7 || base.id == 5 || base.id == 3) {
+				need = 1;
+			}
+			else {
+				need = 2;
+			}
+		}
+	}
+	if (need <= 0)
+		return 0;
+	else
+		return need;
+}
+
+unsigned int Tower::is_dangerous() {  //返回需要士兵数量
+	int need = 0;
+	if (inf->round < 35) {
+		if (enemy.size()) {
+			need = enemy.size() - mytroop.size() + 1;
+		}
+		else {
+			need = 0;
+		}
+	}
+	else {
+		if (enemy.size()) {
+			need = enemy.size() - mytroop.size() + 2;
+		}
+		else {
+			if (base.id == 0 || base.id == 6 || base.id == 4 || base.id == 2) {
+				need = 0;
+			}
+			else if (base.id == 1 || base.id == 7 || base.id == 5 || base.id == 3) {
+				need = 1 - mytroop.size();
+			}
+			else {
+				need = 2 - mytroop.size();
+			}
+		}
+	}
+	if (need <= 0)
+		return 0;
+	else
+		return need;
+
+}
+
 void Tower::defense(vector<Troop>& total_troop) {
 
 	if (this->enemy.size() != 0) {
@@ -773,7 +883,7 @@ void Tower::defense(vector<Troop>& total_troop) {
 					mytroop[i].clean();
 					for (unsigned int j = 0; j < total_troop.size(); j++) {
 						if (total_troop[j].base.id == mytroop[i].base.id) {
-							total_troop[j].state[TOWER] = true;
+							total_troop[j].duty = TOWER_DEFENSE;
 							break;
 						}
 					}
@@ -816,6 +926,9 @@ void Tower::static_generate() {
 
 	attack_evaluation = weigh_accessible * accessible / normalizer_accessible + weigh_danger * danger / normalizer_danger + weigh_troop_convenience * troop_convenience / normalizer_troop_convenience + weigh_blood * base.blood / normalizer_blood;
 	product_evaluation = weigh_convenience * convenience / normalizer_convenience;
+
+	if (base.id == 8)
+		attack_evaluation += 10;
 
 	//cout << "塔" << base.id << "攻击评估:" << attack_evaluation << endl;
 
@@ -1013,7 +1126,8 @@ void Troop::go() {
 	//int apojo;
 	//cin >> apojo;
 	move(base.move_left);
-	if (way[2] != -1 || way[0] != -1 &&base.move_left<6) {
+	//cout << "Go 1" << endl;
+	if (way[2] != -1 || way[0] != -1 && base.move_left<6) {
 		if (way[0] != -1 && way[2] != -1)
 		{
 			int x = 0, y = 0, m = 0;
@@ -1183,9 +1297,9 @@ void Troop::step_go(int x, int y) {
 
 void Troop::map_go(Map& m) {
 
-	for (unsigned int i = 1; i < m.result.size() && i<=base.move_left; i++) {
+	for (unsigned int i = 1; i < m.result.size() && (int)i <= base.move_left; i++) {
 		step_go(m.result[i].x, m.result[i].y);
-		
+
 	}
 }
 
@@ -1195,23 +1309,26 @@ void Troop::clean() {
 		for (int i = 0; i < 2 * base.range + 1; i++)
 			for (int j = 0; j < 2 * base.range + 1; j++)
 			{
-				if (flag(x + i, y + j) != 0) {
-					if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
-						int belong = 0;
-						for (unsigned int k = 0; k<mytroop.size(); k++)
-							if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
-								belong = 1;
-							}
-						if (belong == 0)
+				{
+					if (flag(x + i, y + j) != 0) {
+						if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
+							int belong = 0;
+							for (unsigned int k = 0; k < mytroop.size(); k++)
+								if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
+									belong = 1;
+								}
+							if (belong == 0)
+								inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+						}
+						if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
 							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
-					}
-				if(inf->pointInfo[x + i][y + j].occupied_type == 2&& base.attackable)
-					inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
 
+					}
 				}
 			}
 	}
 }
+
 void Troop::clean(int a) {
 	if (base.attackable) {
 		int x = base.x_position - base.range - base.move_left, y = base.y_position - base.range - base.move_left;
@@ -1225,8 +1342,8 @@ void Troop::clean(int a) {
 							if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
 								belong = 1;
 							}
-						if(belong==0)
-						inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+						if (belong == 0)
+							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
 					}
 					if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
 						inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
@@ -1235,32 +1352,93 @@ void Troop::clean(int a) {
 	}
 }
 
+bool Troop::change_duty(State s) {
+	if (duty == FREE) {
+		duty = s;
+		return true;
+	}
+	else{
+		return false;
+	}
+}
 
 void Troop::march() {
 
 }
 
 void Troop::attack() {
-	if (!state[TOWER]) {
-		endplace(inf->towerInfo[current_attack_tower[0]].position);
-		int d = distance(base.x_position, base.y_position, place[0], place[1]);
-		/*if (base.x_position == place[0] && base.y_position == place[1]) {
-		gettower();
-		}*/
+	if (duty == ATTACK) {
 
-		if (d < base.range) gettower();
-		else go();
+		int current_area_flag = 0;  //默认为1模式，即认为无士兵，通过
+
+		int total_enemy_blood = 0;
+		int total_enemy_armor = 0;
+		int total_enemy_attack = 0;
+		int total_my_blood = 0;
+		int total_my_armor = 0;
+		int total_my_attack = 0;
+		for (unsigned int i = 0; i < enemy.size(); i++) {
+			total_enemy_blood += enemy[i].base.blood;
+			total_enemy_attack += enemy[i].base.attack;
+			total_enemy_armor += enemy[i].base.armor;
+		}
+		for (unsigned int i = 0; i < enemy.size(); i++) {
+			total_my_blood += mytroop[i].base.blood;
+			total_my_attack += mytroop[i].base.attack;
+			total_my_armor += mytroop[i].base.armor;
+		}
+		if (enemy.size()) {
+			double defeat_round = 999;
+			double victory_round = 999;
+			if (total_enemy_attack - total_my_armor > 0){
+				defeat_round = total_my_blood / (total_enemy_attack - total_my_armor);
+			}
+			if (total_my_attack - total_enemy_armor > 0) {
+				victory_round = total_enemy_blood / (total_my_attack - total_enemy_blood);
+			}
+
+			if (defeat_round <= 0.67*victory_round)       //我方有优势时，优先打附近的兵
+				current_area_flag = 2;
+			
+		}
+
+		if (current_area_flag == 0) {
+			endplace(inf->towerInfo[last_attack_tower].position);
+			int d = distance(base.x_position, base.y_position, place[0], place[1]);
+			/*if (base.x_position == place[0] && base.y_position == place[1]) {
+			gettower();
+			}*/
+
+			if (d < base.range) gettower();
+			else go();
+		}
+
+		if (current_area_flag == 2) {
+			attackplace(enemy[0].base.position);
+			go();
+		}
+
+		
 	}
 }
 
+void Troop::attack(int soldierid) {
+
+}
+
 void Troop::defense(int towerid) {
-	if (!state[TOWER]) {
+	//cout << "Check 4.X.X.start" << endl;
+	if (duty == DEFENSE) {
+		//cout << "Check 4.X.X.1" << endl;
 		endplace(inf->towerInfo[towerid].position);
+		//cout << "Check 4.X.X.2" << endl;
 		go();
+		//cout << "Check 4.X.X.3" << endl;
 	}
 	else {
-		cout << "士兵" << base.id << "被塔占用，不能进行回防" << endl;
+		//cout << "士兵" << base.id << "被塔占用，不能进行回防" << endl;
 	}
+	//cout << "Check 4.X.X.end" << endl;
 }
 
 void Troop::act() {
@@ -1298,99 +1476,93 @@ bool Decision::in_list(int id, vector<int> v) {
 	return return_flag;
 }
 
-void Decision::defense() {
+int Decision::get_duty_num(State s) {
+	int sum = 0;
 	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
-		data->MyTroop[i].tag = 0;
+		if (data->MyTroop[i].duty == s) {
+			sum++;
+		}
 	}
-	int towerid = -1;
-	unsigned int max_enemy_amount = 0;
+	return sum;
+}
 
+void Decision::setfree(State s) {
+	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
+		if (data->MyTroop[i].duty == s) {
+			data->MyTroop[i].duty = FREE;
+		}
+	}
+}
+
+
+void Decision::defense() {
+
+	//cout << "Check 4.1" << endl;
 	bool flag = true;
-	if (DefenseSoldier.size()) {  //判断是否达到目标
+	if (get_duty_num(DEFENSE) > 0) {  //判断是否达到目标
 		for (unsigned int i = 0; i < occupied.size(); i++) {
-			if (inf->round <= 40) {
+			if (inf->round <= 50) {
 				if (occupied[i].mytroop.size() - occupied[i].enemy.size() < 0) {
 					flag = false;
 				}
 			}
 			else {
-				if (occupied[i].mytroop.size() - occupied[i].enemy.size() < 2) {
+				if (occupied[i].mytroop.size() - occupied[i].enemy.size() < 1) { //我方士兵比敌方士兵多一个
 					flag = false;
 				}
 			}
 		}
-		if (flag) {
-			//cout << "回防成功，清空防御士兵列表" << endl;
-			for (unsigned int i = 0; i < DefenseSoldier.size(); i++) {
-
-				DefenseSoldier.pop_back();
-			}
+		if (flag) {  //如果已经安全，抹去所有防御标记
+			setfree(DEFENSE);
 		}
 	}
 
+	//cout << "Check 4.2" << endl;
 
+	vector<Tower> defense_list;
+	int sum_soldier_need = 0;
 	for (int i = 0; i < TOTAL_TOWER; i++)
 	{
 		if (data->TowerInf[i].base.owner == current_id) {
-			if (data->TowerInf[i].enemy.size() > max_enemy_amount) {  //选择敌人最多的塔
-				max_enemy_amount = data->TowerInf[i].enemy.size();
-				towerid = i;
+			if (data->TowerInf[i].is_dangerous()) {  
+				defense_list.push_back(data->TowerInf[i]);
+				defense_list[defense_list.size() - 1].soldierneed = data->TowerInf[i].is_dangerous();
+				sum_soldier_need += data->TowerInf[i].is_dangerous();
 			}
 		}
 	}
-	if (DefenseSoldier.size() >= data->TowerInf[towerid].enemy.size()) {  //防守士兵足够，无需回防
-		towerid = -1;
+
+	//cout << "Check 4.3" << endl;
+
+	sort(defense_list.begin(), defense_list.end(), high_danger);
+	for (unsigned int i = 0; i < defense_list.size(); i++) {
+		current_defense_tower.push_back(defense_list[i].base.id);
 	}
 	
-	if (towerid == -1 && inf->round > 40) {  //如果所有塔都没有敌人，寻找没有我方士兵的塔
-		for (int i = 0; i < TOTAL_TOWER; i++)
-		{
-			if (data->TowerInf[i].base.owner == current_id) {
-				if (data->TowerInf[i].mytroop.size() == 0) {
-					towerid = i;
+	//cout << "Check 4.4" << endl;
 
-					//cout << "塔" << i << "无我方士兵，需要回防" << endl;
-				}
-			}
-		}
-	}
-	
+	if (current_defense_tower.size()) {    //如果有需要回防的兵塔
 
-	if (towerid != -1) {    //如果有需要回防的兵塔
-
-		for (unsigned int i = 0; i < AttackSoldier.size(); i++) {  //派去攻击的士兵不必回防
-			data->MyTroop[findorigin(AttackSoldier[i])].tag = 1;
-			//cout << "士兵" << AttackSoldier[i] << "tag被标记为1" << endl;
-		}
-		//cout << "Check 4.1" << endl;
-		if (DefenseSoldier.size()) {
-			for (unsigned int i = 0; i < DefenseSoldier.size(); i++) {
+		if (get_duty_num(DEFENSE)) {
+			for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
 				//cout << "Check 4.1.1." << i << endl;
-				data->MyTroop[findorigin(DefenseSoldier[i])].defense(towerid);
+				data->MyTroop[i].defense(current_defense_tower[0]);             //暂时只优先回防一个塔
 				//cout << "当前既有回防士兵" << findorigin(DefenseSoldier[0]) << endl;
 				//cout << "总回防士兵" << DefenseSoldier.size() << endl;
 			}
 		}
-		//cout << "Check 4.2" << endl;
-		//以下处理逻辑会导致多一个回防兵
 
-		/*for (int i = 0; i < TOTAL_TOWER; i++)
-		{
-		if (data->TowerInf[i].mytroop.size() != 0 && data->TowerInf[i].base.owner == current_id) {
-		data->MyTroop[findorigin(data->TowerInf[i].mytroop[0].base.id)].tag = 1;  //每个塔至少保证一个士兵防御
-		}
-		}*/
+		//cout << "Check 4.5" << endl;
 
 		//bool find_free_soldier_flag = false;
-		bool enough_flag = false;
+		bool safe_flag = false;
 
 		vector<Pair> id_distance;   //index储存士兵id，value储存距离
 		for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //找到零散士兵让其回防,储存在id_distance内
-			if (data->MyTroop[i].tag != 1 && !in_list(data->MyTroop[i].base.id, DefenseSoldier)) {
+			if (data->MyTroop[i].duty == FREE) {
 				id_distance.push_back(Pair(data->MyTroop[i].base.id,
-					distance(data->MyTroop[i].base.position, data->TowerInf[towerid].base.position)));
-				//DefenseSoldier.push_back(data->MyTroop[i].base.id);
-				//data->MyTroop[i].defense(towerid);
+					distance(data->MyTroop[i].base.position, data->TowerInf[current_defense_tower[0]].base.position)));
+
 				//find_free_soldier_flag = true;
 				//cout << "零散士兵" << MyTroop[i].base.id << "出发回防" << endl;
 
@@ -1398,150 +1570,72 @@ void Decision::defense() {
 		}
 		sort(id_distance.begin(), id_distance.end(), value);
 
-		//cout << "Check 4.3" << endl;
-
-		for (unsigned int i = 0; i < id_distance.size()
-			&& DefenseSoldier.size() < data->TowerInf[towerid].enemy.size(); i++) {
-			DefenseSoldier.push_back(id_distance[i].index);  //零散士兵进入
-			data->MyTroop[findorigin(id_distance[i].index)].defense(towerid);  //回防
-			if (DefenseSoldier.size() >= data->TowerInf[towerid].enemy.size()) {
-				enough_flag = true;
-				break;
-			}
-		}
-
-		//cout << "Check 4.4" << endl;
-
-		vector<int> erased_AttackSoldier;  //需要从攻击士兵中抹去的士兵id列表
-
-		vector<Pair> id_distance2;  //抽调攻击士兵时记录id与distance，index储存士兵id，value储存距离
-		if (!enough_flag) {
-			for (unsigned int i = 0; i < AttackSoldier.size(); i++) {  //如果没找到零散士兵，必须从攻击士兵里调用防守
-				int temp_distance = distance(data->MyTroop[findorigin(AttackSoldier[i])].base.position, inf->towerInfo[towerid].position);
-				if (!in_list(data->MyTroop[findorigin(AttackSoldier[i])].base.id, DefenseSoldier))  //判断其是否在Defense列表内
-					id_distance2.push_back(Pair(AttackSoldier[i], temp_distance));
-			}
-		}
-
-		sort(id_distance2.begin(), id_distance2.end(), value);
-
-		//cout << "Check 4.5" << endl;
-
-		for (unsigned int i = 0; i < id_distance2.size()
-			&& DefenseSoldier.size() < data->TowerInf[towerid].enemy.size(); i++) {  //调用从攻击士兵里抽调的防守士兵
-			//cout << "Check 4.5.I." << i << endl;
-			//cout << "push" << id_distance2[i].index << endl;
-			DefenseSoldier.push_back(id_distance2[i].index);
-			//cout << "Check 4.5."<< i << endl;
-			data->MyTroop[findorigin(id_distance2[i].index)].defense(towerid);
-			erased_AttackSoldier.push_back(id_distance2[i].index);
-			if (DefenseSoldier.size() >= data->TowerInf[towerid].enemy.size()) {
-				enough_flag = true;
-				break;
-			}
-		}
-
 		//cout << "Check 4.6" << endl;
 
-		if (erased_AttackSoldier.size()) {  //选定回防士兵之后				
-			for (unsigned int i = 0; i < erased_AttackSoldier.size(); i++) {
+		for (unsigned int i = 0; i < id_distance.size() && get_duty_num(DEFENSE)<sum_soldier_need; i++) {
+			data->MyTroop[findorigin(id_distance[i].index)].duty = DEFENSE;  //自由士兵防守
 
-				for (unsigned int j = 0; j < AttackSoldier.size(); j++) {
-					if (AttackSoldier[j] == erased_AttackSoldier[i]) {
-						AttackSoldier.erase(AttackSoldier.begin() + j);  //去除其在攻击士兵中的位置
-						break;
-					}
-				}
+			data->MyTroop[findorigin(id_distance[i].index)].defense(current_defense_tower[0]);     //暂时只防守一座塔
+			if (get_duty_num(DEFENSE) >= sum_soldier_need) {
+				safe_flag = true;
+				break;
 			}
 		}
+
+		//cout << "Check 4.7" << endl;
+
+
+	
+
 
 	}
 }
 
 void Decision::attack() {
-	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
-		data->MyTroop[i].tag = 0;
-	}
 
-	if (current_attack_tower[0] < 0)
+
+	if (current_attack_tower.size() == 0)
 		return;
 
 	if (last_attack_tower != current_attack_tower[0]) {  //如果更换了攻击目标，可能是塔已经被攻克，证明需要重新规划
-
-														 //cout << "更换攻击塔，清空攻击士兵列表" << endl;
-
-		for (unsigned int i = 0; i < AttackSoldier.size(); i++) {  //清空攻击士兵列表
-			AttackSoldier.pop_back();
+		bool change_flag = true;
+		if (inf->towerInfo[last_attack_tower].owner != current_id) {     //降低敏感性，评价小于50%时不改变攻击目标
+			double current_evaluation = 0;
+			double last_evaluation = 0;
+			for (unsigned int i = 0; i < unoccupied.size(); i++) {
+				if (unoccupied[i].base.id == last_attack_tower) {
+					last_evaluation = unoccupied[i].attack_evaluation;
+				}
+				if (unoccupied[i].base.id == current_attack_tower[0]) {
+					current_evaluation = unoccupied[i].attack_evaluation;
+				}
+			}
+			if (last_evaluation <= ALLOWABLE_ERROR_PROPOTION*current_evaluation)
+				change_flag = false;
 		}
 
-		last_attack_tower = current_attack_tower[0];   //被重新赋值
+		if (change_flag) {
+			setfree(ATTACK);
+
+			last_attack_tower = current_attack_tower[0];   //被重新赋值
+		}
 	}
 
 	///cout << endl;
 	///cout << "我方士兵数量" << inf->playerInfo[current_id].soldier_num << " 数量超过此数量启动攻击" << inf->playerInfo[current_id].tower_num + 1 + DefenseSoldier.size() << endl;
 
-	bool attack_flag = false;
-	if (inf->round < 40) {
-		if (inf->playerInfo[current_id].soldier_num > int(DefenseSoldier.size()))
-			attack_flag = true;
-	}
-	else {
-		if (inf->playerInfo[current_id].soldier_num > int(DefenseSoldier.size()) + 2 * inf->playerInfo[current_id].tower_num)
-			attack_flag = true;
-	}
+	bool attack_flag = true;
 
 	if (attack_flag) {
-		
+			
 
-		if (AttackSoldier.size()) {
-			for (unsigned int i = 0; i < AttackSoldier.size(); i++) {
-				if (data->TowerInf[current_attack_tower[0]].enemy.size() <= AttackSoldier.size())
-					data->MyTroop[findorigin(AttackSoldier[i])].attack();
-				///cout << "当前既有攻击士兵" << findorigin(AttackSoldier[i]) << endl;
-				///cout << "总攻击士兵" << AttackSoldier.size() << endl;
-			}
-
-		}
-
-		for (unsigned int i = 0; i < DefenseSoldier.size(); i++) {
-			data->MyTroop[findorigin(DefenseSoldier[i])].tag = 1;
-			//cout << "士兵" << DefenseSoldier[i] << "tag被标记为1" << endl;
-		}
-		for (unsigned int i = 0; i < AttackSoldier.size(); i++) {  //派去攻击的士兵不必充当防御士兵，很大可能性是过路士兵
-			data->MyTroop[findorigin(AttackSoldier[i])].tag = 1;
-			//cout << "士兵" << AttackSoldier[i] << "tag被标记为1" << endl;
-		}
-		
-		
-
-		for (int i = 0; i < TOTAL_TOWER; i++)         //使每个我方塔至少有一人防御
-		{
-			if (data->TowerInf[i].mytroop.size() != 0 &&
-				data->TowerInf[i].base.owner == current_id) {
-				int num = 0;
-				for (unsigned int j = 0; j < data->TowerInf[i].mytroop.size(); j++) {
-					if (data->MyTroop[findorigin(data->TowerInf[i].mytroop[j].base.id)].tag == 0) {
-						//如果有一个士兵处于空闲状态，不控制它，作为防御士兵
-						data->MyTroop[findorigin(data->TowerInf[i].mytroop[j].base.id)].tag = 1;
-						num++;
-						//cout << "塔" << i << "具有防守士兵" << data->TowerInf[i].mytroop[j].base.id << endl;
-						if (num == 2)
-							break;
-					}
-				}
-			}
-
-		}
-		
 
 		//确定好tag后，找到自由士兵进行攻击
 
 		for (unsigned int i = 0; i < data->MyTroop.size(); i++) { //找到零散士兵让其攻击
-			if (data->MyTroop[i].tag == 0 &&
-				!in_list(data->MyTroop[i].base.id, AttackSoldier)) {
-				AttackSoldier.push_back(data->MyTroop[i].base.id);
-				if (data->TowerInf[current_attack_tower[0]].enemy.size() <= AttackSoldier.size())
-					data->MyTroop[i].attack();
+			if (data->MyTroop[i].duty == FREE) {
+				data->MyTroop[i].duty = ATTACK;
+				data->MyTroop[i].attack();
 				///cout << "零散士兵" << i << "出发攻击" << endl;
 			}
 		}
@@ -1593,17 +1687,8 @@ void Decision::analyse_tower() {
 
 	unsigned int current_attack_tower_iter = 0;     //存储攻击塔的迭代器
 	for (; current_attack_tower_iter < unoccupied.size(); current_attack_tower_iter++) {
-		current_attack_tower[current_attack_tower_iter] = unoccupied[current_attack_tower_iter].base.id;
-
-
+		current_attack_tower.push_back(unoccupied[current_attack_tower_iter].base.id);
 	}
-	//cout << endl;
-
-	for (; current_attack_tower_iter < TOTAL_TOWER; current_attack_tower_iter++) {
-		current_attack_tower[current_attack_tower_iter] = -1;
-	}
-
-
 
 
 }
@@ -1615,6 +1700,7 @@ void Decision::analyse_troop() {
 	}
 
 }
+
 
 void Decision::product() { //生产，需利用generate后的数据
 	int Soldier_resourse[8] = { 0,40,40,50,70,55,60,70 };
@@ -1669,7 +1755,7 @@ void Decision::product() { //生产，需利用generate后的数据
 	//升级塔
 
 	int upgrade_signal[UPGRADE_POINT][2] = {
-		{ 6,0 },{ 9,0 },{ 12,0 },{ 15,0 },{ 20,0 },{ 100,0 }
+		{ 8,0 },{ 12,0 },{ 15,0 },{ 18,0 },{ 20,0 },{ 100,0 }
 	};
 	int upgrade_at_soldiernum;
 
@@ -1724,6 +1810,13 @@ void Decision::product() { //生产，需利用generate后的数据
 void Decision::command_tower() {
 	for (unsigned int i = 0; i < occupied.size(); i++)
 	{
+		int need = occupied[i].basicneed();
+		for (unsigned int j = 0; j < occupied[i].mytroop.size() && (int)j < need; j++) {
+			data->MyTroop[findorigin(occupied[i].mytroop[j].base.id)].duty = TOWER_DEFENSE;
+		}
+	}
+	for (unsigned int i = 0; i < occupied.size(); i++)
+	{
 		//有敌人启动防御
 
 		occupied[i].defense(data->MyTroop);
@@ -1735,7 +1828,40 @@ void Decision::command_tower() {
 }
 
 void Decision::command_troop() {
+	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
+		State type = data->MyTroop[i].duty;
+		if (type == ATTACK)
+			data->MyTroop[i].attack();
+		else if(type == DEFENSE)
+			if(current_defense_tower.size())
+				data->MyTroop[i].defense(current_defense_tower[0]);
+	}
+}
 
+void Decision::get_gamestate() {
+
+	double my_ability = data->EnemyEvaluation[current_id];
+	int rank = 1;
+	for (int i = 0; i < 4; i++) {
+		if (i != current_id) {
+			if (data->EnemyEvaluation[i] > my_ability)
+				rank++;
+		}
+	}
+	/*
+	if (inf->playerInfo[current_id].tower_num == 3 && inf->round <= 60)
+		gamestate = GS_DEFENSE;
+	if (rank >= 4 && inf->round>=40)
+		gamestate = GS_DEFENSE;
+	*/
+
+		
+
+	if (inf->round <= 17)
+		gamestate = SHORT_TERM;
+
+	else
+		gamestate = TOWER_ATTACK;
 }
 
 void Decision::shortterm() {
@@ -1808,22 +1934,53 @@ void Decision::shortterm() {
 
 }
 
+void Decision::develop() {
+
+}
+
+void Decision::tower_attack() {
+
+}
+
+void Decision::soldier_attack() {
+
+}
+
+void Decision::gs_defense() {
+	defense();
+}
+
 void Decision::command() {
 	//产生Properties中的决策指标
-
+	for (unsigned int i = 0; current_attack_tower.size() > 0; i++) {
+		current_attack_tower.pop_back();
+	}
+	for (unsigned int i = 0; current_defense_tower.size() > 0; i++) {
+		current_defense_tower.pop_back();
+	}
 
 	analyse_tower();
 	analyse_troop();
 
+	get_gamestate();
+	//初始化完毕
+
+	//优先级最高/基础操作
+
+	//cout << "check 1" << endl;
 	command_tower(); //向塔传达指令	
-	command_troop();  //向兵传达指令
+	//cout << "check 2" << endl;
 
 	clean();
 
+	//优先级最高/基础操作完成
+	//相关变量
 
 	bool short_term_flag = index[12];
 
-	if (inf->round > 20) {
+	//策略执行
+
+	if (gamestate == TOWER_ATTACK) {
 
 
 		if (first_tower_flag) {
@@ -1831,21 +1988,31 @@ void Decision::command() {
 			first_tower_flag = false;
 		}
 
-		//cout << "行动开始" << endl;
+		//cout << "check 4" << endl;
 		defense();
+		//cout << "check 5" << endl;
 		attack();
-		//cout << "行动结束" << endl;
-		clean();
+		//cout << "check 6" << endl;
+		
 
 	}
-	else {
+	else if (gamestate == SHORT_TERM) {
 		shortterm();
 	}
 
-	product();
+	else if (gamestate == GS_DEFENSE) {
+		gs_defense();
+	}
+	
 
+	//策略后基础操作
+	command_troop();  //向兵传达指令
+	clean();
+	product();
+	//策略后基础操作完成
 
 }
+
 
 
 /**************Decision成员函数定义结束*******************/
