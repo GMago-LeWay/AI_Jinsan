@@ -264,7 +264,7 @@ public:
 		}
 		for (int i = 0; i < 4; i++) {
 			delta[i] = 0;
-			way[i]=-1;
+			way[i] = -1;
 		}
 		place[0] = base.x_position;
 		place[1] = base.y_position;
@@ -934,7 +934,7 @@ void Tower::static_generate() {
 	//cout <<"正则化因子"<< normalizer_accessible << " " << normalizer_danger << " " << normalizer_convenience;
 
 	double weigh_accessible = 1;
-	double weigh_danger = 2;
+	double weigh_danger = 0.5;
 	double weigh_convenience = 2;
 	double weigh_troop_convenience = 2;
 	double weigh_blood = 2;
@@ -1650,7 +1650,10 @@ void Decision::attack() {
 	///cout << endl;
 	///cout << "我方士兵数量" << inf->playerInfo[current_id].soldier_num << " 数量超过此数量启动攻击" << inf->playerInfo[current_id].tower_num + 1 + DefenseSoldier.size() << endl;
 
-	bool attack_flag = true;
+	bool attack_flag = false;
+
+	if (this->get_duty_num(FREE) > data->TowerInf[last_attack_tower].enemy.size())
+		attack_flag = true;
 
 	if (attack_flag) {
 			
@@ -1856,11 +1859,24 @@ void Decision::command_tower() {
 void Decision::command_troop() {
 	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
 		State type = data->MyTroop[i].duty;
-		if (type == ATTACK)
+		if (type == ATTACK) {
 			data->MyTroop[i].attack();
-		else if(type == DEFENSE)
-			if(current_defense_tower.size())
+		}
+		else if (type == DEFENSE) {
+			if (current_defense_tower.size())
 				data->MyTroop[i].defense(current_defense_tower[0]);
+		}
+		else if (type == FREE) {
+			int min_distance = 999;
+			int argmin = 0;
+			for (unsigned int j = 0; j < data->TowerInf.size(); j++) {
+				if (distance(data->TowerInf[j].base.position, data->MyTroop[i].base.position) <= min_distance) {
+					min_distance = distance(data->TowerInf[j].base.position, data->MyTroop[i].base.position);
+					argmin = j;
+				}
+			}
+			data->MyTroop[i].defense(argmin);
+		}
 	}
 }
 
