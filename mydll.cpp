@@ -1859,11 +1859,11 @@ void Decision::command_tower() {
 		}
 	}
 	//cout << "check" <<" 1.1" << endl;
-	for (unsigned int i = 0; i < occupied.size(); i++)
+	for (unsigned int i = 0; i < data->TowerInf.size(); i++)
 	{
-		//有敌人启动防御
+		//所有塔启动清兵
 
-		occupied[i].defense(data->MyTroop);
+		data->TowerInf[i].defense(data->MyTroop);
 
 
 	}
