@@ -700,7 +700,7 @@ info.myCommandList.addCommand(Move,aim_soldier_id,UP,distance);//移动命令，
 */
 void player_ai(Info& info)
 {
-	cout << "Round " << info.round << " start." << endl << endl;
+	//cout << "Round " << info.round << " start." << endl << endl;
 
 	Properties MyProperties(info);
 
@@ -721,7 +721,7 @@ void player_ai(Info& info)
 	}
 	cout << endl;
 	*/
-	cout << "Round " << info.round << " end." << endl << endl;
+	//cout << "Round " << info.round << " end." << endl << endl;
 	//cin >> n;
 
 }
@@ -876,13 +876,13 @@ void Tower::defense(vector<Troop>& total_troop) {
 		int k = 0;
 		sort(enemy.begin(), enemy.end(), blood_left);
 		for (unsigned int i = 0; i < mytroop.size(); i++) {
-			cout << mytroop[i].base.id << "check" << "1.1.0" << endl;
+			//cout << mytroop[i].base.id << "check" << "1.1.0" << endl;
 			if (enemy[k].base.blood <= 0) k++;   //按顺序攻击
 
 			if (distance(mytroop[i].base.position, enemy[k].base.position) > mytroop[i].base.range) {
-				cout << mytroop[i].base.id << "check" << "1.1.0.1" << endl;
+				//cout << mytroop[i].base.id << "check" << "1.1.0.1" << endl;
 				mytroop[i].attackplace(enemy[k].base.position);
-				cout << mytroop[i].base.id << "check" << "1.1.0.2" << endl;
+				//cout << mytroop[i].base.id << "check" << "1.1.0.2" << endl;
 				if (mytroop[i].base.x_position >= point[0] &&
 					mytroop[i].base.y_position >= point[1] &&
 					mytroop[i].base.x_position <= point[0] + length &&
@@ -1040,7 +1040,7 @@ void Troop::attackplace(int x, int y) {
 	int number = (2 * len + 1)*(2 * len + 1);
 	int(*score)[3] = new int[number][3]; //0:x 1:y 2:score
 	place[0] = a; place[1] = b;
-	cout << base.id << "check" << "1.1.1.0" << endl;
+	//cout << base.id << "check" << "1.1.1.0" << endl;
 	for (int i = 0; i < 2 * len + 1; i++) {
 		for (int j = 0; j < 2 * len + 1; j++) {
 			int rt = i * (2 * len + 1) + j;
@@ -1069,7 +1069,7 @@ void Troop::attackplace(int x, int y) {
 		}
 
 	}
-	cout << "check" << "1.1.1.1" << endl;
+	//cout << "check" << "1.1.1.1" << endl;
 }
 
 void Troop::attackplace(TPoint t) {
@@ -1857,7 +1857,7 @@ void Decision::command_tower() {
 			data->MyTroop[findorigin(occupied[i].mytroop[j].base.id)].duty = TOWER_DEFENSE;
 		}
 	}
-	cout << "check" <<" 1.1" << endl;
+	//cout << "check" <<" 1.1" << endl;
 	for (unsigned int i = 0; i < occupied.size(); i++)
 	{
 		//有敌人启动防御
@@ -1866,7 +1866,7 @@ void Decision::command_tower() {
 
 
 	}
-	cout << "check" << "1.2" << endl;
+	//cout << "check" << "1.2" << endl;
 
 }
 
@@ -2014,9 +2014,9 @@ void Decision::command() {
 
 	//优先级最高/基础操作
 
-	cout << "check 1" << endl;
+	//cout << "check 1" << endl;
 	command_tower(); //向塔传达指令	
-					 cout << "check 2" << endl;
+					// cout << "check 2" << endl;
 
 	clean();
 
@@ -2035,11 +2035,11 @@ void Decision::command() {
 			first_tower_flag = false;
 		}
 
-		cout << "check 4" << endl;
+		//cout << "check 4" << endl;
 		defense();
-		cout << "check 5" << endl;
+		//cout << "check 5" << endl;
 		attack();
-		cout << "check 6" << endl;
+		//cout << "check 6" << endl;
 
 
 	}
