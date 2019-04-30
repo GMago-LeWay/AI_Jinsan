@@ -1860,11 +1860,11 @@ void Decision::command_troop() {
 	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
 		State type = data->MyTroop[i].duty;
 		if (type == ATTACK) {
-			data->MyTroop[i].attack();
+			//data->MyTroop[i].attack();                //已经被执行过，无需再次执行
 		}
 		else if (type == DEFENSE) {
-			if (current_defense_tower.size())
-				data->MyTroop[i].defense(current_defense_tower[0]);
+			//if (current_defense_tower.size())
+				//data->MyTroop[i].defense(current_defense_tower[0]);
 		}
 		else if (type == FREE) {
 			int min_distance = 999;
