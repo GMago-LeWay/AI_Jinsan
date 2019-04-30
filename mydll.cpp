@@ -1067,8 +1067,8 @@ void Troop::attackplace(TPoint t) {
 
 void Troop::search(int type) {
 	int a = base.x_position, b = base.y_position;
-	way[0] > -1 ?  a += delta[way[0]] * (2 * way[0] - 5):a += 0  ;
-	way[2]>-1 ?    b += delta[way[2]] * (1 - 2 * way[2]):b += 0 ;
+	if(way[0]<4&&way[0] > -1 )  a += delta[way[0]] * (2 * way[0] - 5) ;
+	if (way[2] > -1 && way[2] < 4) b += delta[way[2]] * (1 - 2 * way[2]);
 	int min = move_left, c = a - move_left, d = b - move_left;
 	place[0] = a; place[1] = b;
 	for (int i = 0; i < 2* move_left +1; i++) {
