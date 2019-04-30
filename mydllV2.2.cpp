@@ -1407,7 +1407,7 @@ void Troop::attack() {
 				defeat_round = total_my_blood / (total_enemy_attack - total_my_armor);
 			}
 			if (total_my_attack - total_enemy_armor > 0) {
-				victory_round = total_enemy_blood / (total_my_attack - total_enemy_blood);
+				victory_round = total_enemy_blood / (total_my_attack - total_enemy_armor);
 			}
 
 			if (defeat_round <= 0.67*victory_round)       //我方有优势时，优先打附近的兵
@@ -1853,6 +1853,20 @@ void Decision::command_troop() {
 }
 
 void Decision::get_gamestate() {
+	double my_ability = data->EnemyEvaluation[current_id];
+	int rank = 1;
+	for (int i = 0; i < 4; i++) {
+		if (i != current_id) {
+			if (data->EnemyEvaluation[i] > my_ability)
+				rank++;
+		}
+	}
+	/*
+	if (inf->playerInfo[current_id].tower_num == 3 && inf->round <= 60)
+	gamestate = GS_DEFENSE;
+	if (rank >= 4 && inf->round>=40)
+	gamestate = GS_DEFENSE;
+	*/
 	if (inf->round <= 17)
 		gamestate = SHORT_TERM;
 
