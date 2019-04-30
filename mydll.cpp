@@ -1027,15 +1027,15 @@ void Troop::attackplace(int x, int y) {
 	int a = base.x_position;
 	int b = base.y_position;
 	int  min = distance(a,b,x,y)+20;
-	length = base.range;
-	int number = (2 * length + 1)*(2 * length + 1);
+	int len = base.range;
+	int number = (2 * len + 1)*(2 * len + 1);
 	int (*score)[3] =  new int[number][3] ; //0:x 1:y 2:score
 	place[0] = a; place[1] = b;
 	
-	for (int i = 0; i < 2 * length + 1; i++) {
-		for (int j = 0; j < 2 * length + 1; j++) {
-			int rt = i * (2 * length + 1) + j;
-			score[rt][0] = x -length+i; score[rt][1] = y - length + j; score[rt][2] = distance(a, b, score[rt][0], score[rt][1]);
+	for (int i = 0; i < 2 * len + 1; i++) {
+		for (int j = 0; j < 2 * len + 1; j++) {
+			int rt = i * (2 * len + 1) + j;
+			score[rt][0] = x -len+i; score[rt][1] = y - len + j; score[rt][2] = distance(a, b, score[rt][0], score[rt][1]);
 		
 			if (!flag(score[rt][0], score[rt][1])
 				|| !(inf->pointInfo[score[rt][0]][score[rt][1]].occupied_type == 0)
@@ -1044,7 +1044,7 @@ void Troop::attackplace(int x, int y) {
 			}
 			
 			if (distance(a, b, score[rt][0], score[rt][1]) <= move_left) score[rt][2] -= 5;
-			if (distance(x, y, score[rt][0], score[rt][1]) <= length) score[rt][2] -= 5;
+			if (distance(x, y, score[rt][0], score[rt][1]) <= len) score[rt][2] -= 5;
 			if (inf->pointInfo[score[rt][0]][score[rt][1]].land == 1) {
 				if (base.type == 3 || base.type == 7 || base.type == 2 || base.type == 6) score[rt][2] -= 2;
 			}
@@ -1070,6 +1070,7 @@ void Troop::search(int type) {
 	int a = base.x_position, b = base.y_position;
 	if(way[0]<4&&way[0] > -1 )  a += delta[way[0]] * (2 * way[0] - 5) ;
 	if (way[2] > -1 && way[2] < 4) b += delta[way[2]] * (1 - 2 * way[2]);
+	if(way[2]!=-1||way[0]!=-1){
 	int min = move_left, c = a - move_left, d = b - move_left;
 	place[0] = a; place[1] = b;
 	for (int i = 0; i < 2* move_left +1; i++) {
@@ -1083,6 +1084,7 @@ void Troop::search(int type) {
 		}
 	}
 	 go();
+	}
 }
 
 void Troop::investigation() {
