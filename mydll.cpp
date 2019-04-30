@@ -403,6 +403,9 @@ class Troops {
 
 	vector<Troop> Trooplist;
 };
+bool blood_left(const Enemy &a, const Enemy &b) {
+	return a.base.blood < b.base.blood;
+}
 
 class Tower {                //对塔的评估
 public:
