@@ -266,6 +266,11 @@ public:
 			delta[i] = 0;
 			way[i] = -1;
 		}
+		for (int i = 0; i < 11; i++) {
+			for (int j = 0; j < 11; j++) {
+				detail[i][j] = -1;
+			}
+		}
 		place[0] = base.x_position;
 		place[1] = base.y_position;
 
@@ -405,7 +410,7 @@ class Troops {
 	vector<Troop> Trooplist;
 };
 bool blood_left(const Enemy &a, const Enemy &b) {
-	if (a.base.blood == b.base.blood) return a.base.blood < b.base.blood;
+	if (a.base.blood != b.base.blood) return a.base.blood < b.base.blood;
 	else return a.base.id < b.base.id;
 }
 
@@ -706,7 +711,7 @@ void player_ai(Info& info)
 
 	//cout << "初始化完成Round" << info.round << endl;
 
-	//if(info.round>80)cin >> n;
+	//if(info.round>89)cin >> n;
 	//初始化完成
 	Decision MyDecision(&MyProperties);
 	MyDecision.command();
@@ -874,7 +879,8 @@ unsigned int Tower::is_dangerous() {  //返回需要士兵数量
 void Tower::defense(vector<Troop>& total_troop) {
 	if (this->enemy.size() != 0) {
 		int k = 0;
-		sort(enemy.begin(), enemy.end(), blood_left);
+
+		//sort(enemy.begin(), enemy.end(), blood_left);
 		for (unsigned int i = 0; i < mytroop.size(); i++) {
 			//cout << mytroop[i].base.id << "check" << "1.1.0" << endl;
 			if (enemy[k].base.blood <= 0) k++;   //按顺序攻击
@@ -905,7 +911,7 @@ void Tower::defense(vector<Troop>& total_troop) {
 				inf->myCommandList.addCommand(Attack, mytroop[i].base.id, enemy[k].base.x_position, enemy[k].base.y_position);
 			
 			//cout << mytroop[i].base.id<< "check" << "1.1.2" << endl;
-			/*if (mytroop[i].move_left > 0) {
+			if (mytroop[i].move_left > 0) {
 
 				if (mytroop[i].base.type == 3 || mytroop[i].base.type == 2 || mytroop[i].base.type == 6)  mytroop[i].search(1);
 
@@ -914,7 +920,7 @@ void Tower::defense(vector<Troop>& total_troop) {
 
 
 
-			}*/
+			}
 			//cout << mytroop[i].base.id << "check" << "1.1.3" << endl;
 
 		}
@@ -1034,44 +1040,47 @@ void Troop::endplace(TPoint t) {
 }
 
 void Troop::attackplace(int x, int y) {
-	int a = base.x_position;
-	int b = base.y_position;
-	int  min = distance(a, b, x, y) + 20;
-	int len = base.range;
-	int number = (2 * len + 1)*(2 * len + 1);
-	int(*score)[3] = new int[number][3]; //0:x 1:y 2:score
-	place[0] = a; place[1] = b;
-	//cout << base.id << "check" << "1.1.1.0" << endl;
-	for (int i = 0; i < 2 * len + 1; i++) {
-		for (int j = 0; j < 2 * len + 1; j++) {
-			int rt = i * (2 * len + 1) + j;
-			score[rt][0] = x - len + i; score[rt][1] = y - len + j; score[rt][2] = distance(a, b, score[rt][0], score[rt][1]);
-			if (flag(score[rt][0], score[rt][1])) {
-				if (!(inf->pointInfo[score[rt][0]][score[rt][1]].occupied_type == 0)
-					|| !(inf->pointInfo[score[rt][0]][score[rt][1]].land != 2)) {
-					score[rt][2] += 1000;
-				}
+	//cout <<base.id<< "endplace" << endl;
+									   int a = base.x_position;
+									   int b = base.y_position;
+									   int  min = distance(a, b, x, y) + 20;
+									   int len = base.range;
+									   int number = (2 * len + 1)*(2 * len + 1);
+									   int(*score)[3] = new int[number][3]; //0:x 1:y 2:score
+									   place[0] = a; place[1] = b;
+									  // cout <<  "check" << "1.1.1.0" << endl;
+									   for (int i = 0; i < 2 * len + 1; i++) {
+									   for (int j = 0; j < 2 * len + 1; j++) {
+									   int rt = i * (2 * len + 1) + j;
+									   score[rt][0] = x - len + i; score[rt][1] = y - len + j; score[rt][2] = distance(a, b, score[rt][0], score[rt][1]);
+									   if (flag(score[rt][0], score[rt][1])) {
+									   if (!(inf->pointInfo[score[rt][0]][score[rt][1]].occupied_type == 0)
+									   || !(inf->pointInfo[score[rt][0]][score[rt][1]].land != 2)) {
+									   score[rt][2] += 1000;
+									   }
 
-				if (distance(a, b, score[rt][0], score[rt][1]) <= move_left) score[rt][2] -= 5;
-				if (distance(x, y, score[rt][0], score[rt][1]) <= len) score[rt][2] -= 5;
-				if (inf->pointInfo[score[rt][0]][score[rt][1]].land == 1) {
-					if (base.type == 3 || base.type == 7 || base.type == 2 || base.type == 6) score[rt][2] -= 2;
-				}
+									   if (distance(a, b, score[rt][0], score[rt][1]) <= move_left) score[rt][2] -= 5;
+									   if (distance(x, y, score[rt][0], score[rt][1]) <= len) score[rt][2] -= 5;
+									   if (inf->pointInfo[score[rt][0]][score[rt][1]].land == 1) {
+									   if (base.type == 3 || base.type == 7 || base.type == 2 || base.type == 6) score[rt][2] -= 2;
+									   }
 
-				if (inf->pointInfo[score[rt][0]][score[rt][1]].land == 4) {
-					if (base.type == 5 || base.type == 6 || base.type == 7) score[rt][2] -= 2;
-				}
+									   if (inf->pointInfo[score[rt][0]][score[rt][1]].land == 4) {
+									   if (base.type == 5 || base.type == 6 || base.type == 7) score[rt][2] -= 2;
+									   }
 
-				if (score[rt][2] < min) {
-					min = score[rt][2];
-					place[0] = score[rt][0]; place[1] = score[rt][1];
-				}
-			}
-		}
+									   if (score[rt][2] < min) {
+									   min = score[rt][2];
+									   place[0] = score[rt][0]; place[1] = score[rt][1];
+									   }
+									   }
+									   }
 
-	}
-	//cout << "check" << "1.1.1.1" << endl;
+									   }
+									   //cout << "check" << "1.1.1.1" << endl;
+	
 }
+
 
 void Troop::attackplace(TPoint t) {
 	attackplace(t.x, t.y);
@@ -1141,8 +1150,10 @@ void Troop::gettower() {
 			for (int j = 0; j < 2 * base.range + 1; j++)
 			{
 				int d = distance(base.x_position, base.y_position, x + i, y + j);
-				if (inf->pointInfo[x + i][y + j].occupied_type == 2 && d <= base.range && base.attackable)
-					inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+				if (flag(x + i, y + j)) {
+					if (inf->pointInfo[x + i][y + j].occupied_type == 2 && d <= base.range && base.attackable)
+						inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+				}
 			}
 
 	}
@@ -1151,6 +1162,7 @@ void Troop::gettower() {
 void Troop::go() {
 	//int apojo;
 	//cin >> apojo;
+
 	move(move_left);
 	//cout << "Go 1" << endl;
 	if (way[2] != -1 || way[0] != -1 && move_left<6) {
@@ -1163,7 +1175,7 @@ void Troop::go() {
 					for (int i = 0; i < len + 1; i++) {
 						if (m == 0) {
 							int a = base.x_position + i * (2 * way[0] - 5), b = base.y_position + (len - i) * (1 - 2 * way[2]);
-							if (flag(a, b) != 0) {
+							if (flag(a, b) == 1) {
 								if (inf->pointInfo[a][b].occupied_type == 0 && inf->pointInfo[a][b].land != 2) {
 									if (base.type != 3 && base.type != 7 && i <= way[1] && len - i <= way[3]) { x = i; y = len - i; m = 1; }
 									else {
@@ -1198,13 +1210,15 @@ void Troop::go() {
 			}
 		}
 
-
+	
 		else if (way[2] == -1) {
 			int fla = 0;
 			for (int i = 1; i < way[1] + 1; i++) {
 				int x = base.x_position + i * (2 * way[0] - 5), y = base.y_position;
-				if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2)
-					fla = i;
+				if (flag(x, y) == 1) {
+					if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2)
+						fla = i;
+				}
 			}
 			if (fla != 0) {
 				inf->myCommandList.addCommand(Move, base.id, way[0], fla);
@@ -1216,36 +1230,38 @@ void Troop::go() {
 				int fle = 0;
 				for (int i = -move_left; i <= move_left; i++) {
 					int x = base.x_position + 2 * way[0] - 5, y = base.y_position + i;
-					if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) {
-						if (i < 0) {
-							inf->myCommandList.addCommand(Move, base.id, 1, -i);
-							//cout << "id" << " " << base.id << " " << "extr down" << endl;
-							move_left -= -i;
-							delta[1] = -i;
-							for (int j = 0; j <= move_left + i; j++)
-							{
-								inf->myCommandList.addCommand(Move, base.id, way[0], 1);
-								//cout << "id" << " " << base.id << " " << "ver one" << endl;
-								move_left--;
-								delta[way[0]]++;
+					if (flag(x, y) == 1){
+						if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) {
+							if (i < 0) {
+								inf->myCommandList.addCommand(Move, base.id, 1, -i);
+								//cout << "id" << " " << base.id << " " << "extr down" << endl;
+								move_left -= -i;
+								delta[1] = -i;
+								for (int j = 0; j <= move_left + i; j++)
+								{
+									inf->myCommandList.addCommand(Move, base.id, way[0], 1);
+									//cout << "id" << " " << base.id << " " << "ver one" << endl;
+									move_left--;
+									delta[way[0]]++;
+								}
+								fle = 1;
 							}
-							fle = 1;
-						}
-						else {
-							inf->myCommandList.addCommand(Move, base.id, 0, i);
-							//cout << "id" << " " << base.id << " " << "extr up" << endl;
-							move_left -= i;
-							delta[0] = i;
-							for (int j = 0; j <= move_left - i; j++) {
-								inf->myCommandList.addCommand(Move, base.id, way[0], 1);
-								//cout << "id" << " " << base.id << " " << "ver one" << endl;
-								move_left--;
-								delta[way[0]] ++;
+							else {
+								inf->myCommandList.addCommand(Move, base.id, 0, i);
+								//cout << "id" << " " << base.id << " " << "extr up" << endl;
+								move_left -= i;
+								delta[0] = i;
+								for (int j = 0; j <= move_left - i; j++) {
+									inf->myCommandList.addCommand(Move, base.id, way[0], 1);
+									//cout << "id" << " " << base.id << " " << "ver one" << endl;
+									move_left--;
+									delta[way[0]] ++;
+								}
+								fle = 1;
 							}
-							fle = 1;
+							break;
 						}
-						break;
-					}
+				}
 				}
 				if (fle == 0) {
 					inf->myCommandList.addCommand(Move, base.id, way[0], way[1]);
@@ -1259,7 +1275,9 @@ void Troop::go() {
 			int laf = 0;
 			for (int i = 1; i <= way[3]; i++) {
 				int x = base.x_position, y = base.y_position + i * (1 - 2 * way[2]);
-				if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2)  laf = i;
+				if (flag(x, y) == 1) {
+					if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2)  laf = i;
+				}
 			}
 			if (laf != 0) {
 				inf->myCommandList.addCommand(Move, base.id, way[2], laf);
@@ -1271,37 +1289,39 @@ void Troop::go() {
 				int  lafq = 0;
 				for (int i = -move_left; i <= move_left; i++) {
 					int x = base.x_position + i, y = base.y_position + 1 - 2 * way[2];
-					if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) {
-						if (i < 0) {
-							inf->myCommandList.addCommand(Move, base.id, 2, -i);
-							//cout << "id" << " " << base.id << " " << "extr left" << endl;
-							move_left -= -i;
-							delta[2] = -i;
-							for (int j = 0; j < move_left + i; j++)
-							{
-								inf->myCommandList.addCommand(Move, base.id, way[2], 1);
-								//cout << "id" << " " << base.id << " " << "hor one" << endl;
-								move_left--;
-								delta[way[2]] ++;
+					if (flag(x, y) == 1){
+						if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) {
+							if (i < 0) {
+								inf->myCommandList.addCommand(Move, base.id, 2, -i);
+								//cout << "id" << " " << base.id << " " << "extr left" << endl;
+								move_left -= -i;
+								delta[2] = -i;
+								for (int j = 0; j < move_left + i; j++)
+								{
+									inf->myCommandList.addCommand(Move, base.id, way[2], 1);
+									//cout << "id" << " " << base.id << " " << "hor one" << endl;
+									move_left--;
+									delta[way[2]] ++;
+								}
+								lafq = 1;
 							}
-							lafq = 1;
-						}
-						else {
-							inf->myCommandList.addCommand(Move, base.id, 3, i);
-							//cout << "id" << " " << base.id << " " << "extr right" << endl;
-							move_left -= i;
-							delta[3] = i;
-							for (int j = 0; j < move_left - i; j++) {
-								inf->myCommandList.addCommand(Move, base.id, way[2], 1);
-								//cout << "id" << " " << base.id << " " << "hor one" << endl;
-								move_left--;
-								delta[way[2]]++;
-							}
+							else {
+								inf->myCommandList.addCommand(Move, base.id, 3, i);
+								//cout << "id" << " " << base.id << " " << "extr right" << endl;
+								move_left -= i;
+								delta[3] = i;
+								for (int j = 0; j < move_left - i; j++) {
+									inf->myCommandList.addCommand(Move, base.id, way[2], 1);
+									//cout << "id" << " " << base.id << " " << "hor one" << endl;
+									move_left--;
+									delta[way[2]]++;
+								}
 
-							lafq = 1;
+								lafq = 1;
+							}
+							break;
 						}
-						break;
-					}
+				}
 				}
 				if (lafq == 0) {
 					inf->myCommandList.addCommand(Move, base.id, way[2], way[3]);
@@ -1348,7 +1368,7 @@ void Troop::clean() {
 			for (int j = 0; j < 2 * base.range + 1; j++)
 			{
 				{
-					if (flag(x + i, y + j) != 0) {
+					if (flag(x + i, y + j) ==1) {
 						if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
 							int belong = 0;
 							for (unsigned int k = 0; k < mytroop.size(); k++) {
@@ -1374,7 +1394,7 @@ void Troop::clean(int a) {
 		for (int i = 0; i < 2 * (base.range + base.move_left) + 1; i++)
 			for (int j = 0; j < 2 * (base.range + base.move_left) + 1; j++)
 			{
-				if (flag(x + i, y + j) != 0) {
+				if (flag(x + i, y + j) ==1 ) {
 					if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
 						int belong = 0;
 						for (unsigned int k = 0; k<mytroop.size(); k++) {
@@ -1407,8 +1427,9 @@ void Troop::march() {
 }
 
 void Troop::attack() {
+	//cout << "check 6.11110" << " " << base.id << endl;
 	if (duty == ATTACK) {
-		
+		//cout << "check 6.111100" << endl;
 		int current_area_flag = 0;  //默认为1模式，即认为无士兵，通过
 		
 		int total_enemy_blood = 0;
@@ -1422,11 +1443,13 @@ void Troop::attack() {
 			total_enemy_attack += enemy[i].base.attack;
 			total_enemy_armor += enemy[i].base.armor;
 		}
-		for (unsigned int i = 0; i < enemy.size(); i++) {
+		for (unsigned int i = 0; i < mytroop.size(); i++) {
 			total_my_blood += mytroop[i].base.blood;
 			total_my_attack += mytroop[i].base.attack;
 			total_my_armor += mytroop[i].base.armor;
+	
 		}
+		//cout << "check 6.111101" << endl;
 		if (enemy.size()) {
 			double defeat_round = 999;
 			double victory_round = 999;
@@ -1436,30 +1459,34 @@ void Troop::attack() {
 			if (total_my_attack - total_enemy_armor > 0) {
 				victory_round = total_enemy_blood / (total_my_attack - total_enemy_armor);
 			}
-
-			if (defeat_round <= 0.67*victory_round)       //我方有优势时，优先打附近的兵
+	
+			if (defeat_round < 0.67*victory_round)       //我方有优势时，优先打附近的兵
 				current_area_flag = 2;
 
 		}
-		
+		//cout << "check 6.111102" << endl;
+
 		if (current_area_flag == 0) {
 			endplace(inf->towerInfo[last_attack_tower].position);
 			int d = distance(base.x_position, base.y_position, place[0], place[1]);
 			/*if (base.x_position == place[0] && base.y_position == place[1]) {
 			gettower();
 			}*/
-		
-			if (d < base.range) gettower();
-			else go();
+			
+			if (d < base.range)  gettower();
+			else go(); 
+			
+			
 		}
-
+		//cout << "check 6.111103" << endl;
 		if (current_area_flag == 2) {
 			attackplace(enemy[0].base.position);
 			go();
 		}
-
+		//cout << "check 6.111104" << endl;
 
 	}
+	//cout << "check 6.111101" << endl;
 }
 
 void Troop::attack(int soldierid) {
@@ -1859,11 +1886,11 @@ void Decision::command_tower() {
 		}
 	}
 	//cout << "check" <<" 1.1" << endl;
-	for (unsigned int i = 0; i < data->TowerInf.size(); i++)
+	for (unsigned int i = 0; i < occupied.size(); i++)
 	{
-		//所有塔启动清兵
+		//有敌人启动防御
 
-		data->TowerInf[i].defense(data->MyTroop);
+		occupied[i].defense(data->MyTroop);
 
 
 	}
@@ -1872,16 +1899,24 @@ void Decision::command_tower() {
 }
 
 void Decision::command_troop() {
+	//cout << "check" << "6.0" << endl;
 	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
+		//cout << "check" << "6.11" << data->MyTroop.size()<< endl;
+		//cout << "check" << "6.11" << i << endl;
 		State type = data->MyTroop[i].duty;
 		if (type == ATTACK) {
-			data->MyTroop[i].attack();                //已经被执行过，无需再次执行
+			//cout << "check" << "6.1111" <<  endl;
+			data->MyTroop[i].attack();  
+			//cout << "check" << "6.1112" << endl;//已经被执行过，无需再次执行
 		}
 		else if (type == DEFENSE) {
+			//cout << "check" << "6.1121"  << endl;
 			if (current_defense_tower.size())
 				data->MyTroop[i].defense(current_defense_tower[0]);
+			//cout << "check" << "6.1122" << endl;
 		}
 		else if (type == FREE) {
+			//cout << "check" << "6.1131" << endl;
 			int min_distance = 999;
 			int argmin = 0;
 			for (unsigned int j = 0; j < data->TowerInf.size(); j++) {
@@ -1890,9 +1925,13 @@ void Decision::command_troop() {
 					argmin = j;
 				}
 			}
+			//cout << "check" << "6.1132" << endl;
 			data->MyTroop[i].defense(argmin);
+			//cout << "check" << "6.1133" << endl;
 		}
+		//cout << "check" << "6.19" << endl;
 	}
+	//cout << "check" << "6.9" << endl;
 }
 
 void Decision::get_gamestate() {
@@ -2054,9 +2093,12 @@ void Decision::command() {
 
 
 	//策略后基础操作
-	command_troop();  //向兵传达指令
+	command_troop(); //向兵传达指令
+	//cout << "check 7" << endl;
 	clean();
+	//cout << "check 8" << endl;
 	product();
+	//cout << "check 9" << endl;
 	//策略后基础操作完成
 
 }
