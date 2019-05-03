@@ -337,6 +337,7 @@ public:
 	void attackplace(int x, int y);
 	void attackplace(TPoint t);
 	void search(int type);   //搜索地形，length视野，type地形
+	void withdraw();
 	void gettower();
 	void go();
 
@@ -911,16 +912,7 @@ void Tower::defense(vector<Troop>& total_troop) {
 				inf->myCommandList.addCommand(Attack, mytroop[i].base.id, enemy[k].base.x_position, enemy[k].base.y_position);
 			
 			//cout << mytroop[i].base.id<< "check" << "1.1.2" << endl;
-			if (mytroop[i].move_left > 0) {
-
-				if (mytroop[i].base.type == 3 || mytroop[i].base.type == 2 || mytroop[i].base.type == 6)  mytroop[i].search(1);
-
-
-				if (mytroop[i].base.type == 5 || mytroop[i].base.type == 6 || mytroop[i].base.type == 7) mytroop[i].search(4);
-
-
-
-			}
+			mytroop[i].withdraw();
 			//cout << mytroop[i].base.id << "check" << "1.1.3" << endl;
 
 		}
@@ -1106,7 +1098,12 @@ void Troop::search(int type) {
 		go();
 	}
 }
-
+void Troop::withdraw() {
+	if (move_left > 0) {
+		if (base.type == 3 || base.type == 2 || base.type == 6) search(1);
+		if (base.type == 5 || base.type == 6 || base.type == 7) search(4);
+	}
+}
 void Troop::investigation() {
 	//获取周围视野
 	for (int i = 0; i < view_length; i++) {
@@ -1906,7 +1903,8 @@ void Decision::command_troop() {
 		State type = data->MyTroop[i].duty;
 		if (type == ATTACK) {
 			//cout << "check" << "6.1111" <<  endl;
-			data->MyTroop[i].attack();  
+			data->MyTroop[i].attack();
+			if (data->MyTroop[i].move_left > 0) data->MyTroop[i].withdraw();
 			//cout << "check" << "6.1112" << endl;//已经被执行过，无需再次执行
 		}
 		else if (type == DEFENSE) {
