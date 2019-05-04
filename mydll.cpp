@@ -263,7 +263,6 @@ public:
 			state[i] = false;
 		}
 		for (int i = 0; i < 4; i++) {
-			delta[i] = 0;
 			way[i] = -1;
 		}
 		for (int i = 0; i < 11; i++) {
@@ -293,7 +292,6 @@ public:
 
 		for (int i = 0; i < 4; i++) {
 			way[i] = t.way[i];
-			delta[i] = t.delta[i];
 			if (i < 2) {
 				place[i] = t.place[i];
 				current_position[i] = t.current_position[i];
@@ -375,7 +373,6 @@ public:
 
 	int way[4];       //x方向走左右+距离+y方向走左右+距离
 	int place[2];     //目标点
-	int delta[4];      //坐标更新量
 	int move_left;
 	int current_position[2];
 
