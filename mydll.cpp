@@ -308,6 +308,11 @@ public:
 		for (unsigned int i = 0; i < t.mytroop.size(); i++) {
 			mytroop.push_back(t.mytroop[i]);
 		}
+
+		for (unsigned int i = 0; i < t.mymangonel.size(); i++) {
+			mymangonel.push_back(t.mymangonel[i]);
+		}
+
 		for (unsigned int i = 0; i < t.enemy.size(); i++) {
 			enemy.push_back(t.enemy[i]);
 		}
@@ -351,7 +356,6 @@ public:
 	bool change_duty(State s);
 	void march();
 	void attack();    //攻击当前攻击塔
-	void attack(int soldierid);   //攻击某士兵
 	void defense(int towerid);
 
 	void act();    //总行动
@@ -380,6 +384,7 @@ public:
 	int point[2];        //视野左下角坐标
 
 	vector<Troop> mytroop;
+	vector<Troop> mymangonel;
 	vector<Enemy> enemy;
 
 	TPoint attack_target;        //攻击目标
@@ -439,9 +444,12 @@ public:
 						if (inf->soldierInfo[k].id == soldier_id) {  //找到士兵
 
 							if (inf->soldierInfo[k].owner == current_id) {
-								//cout << "开始push自己的士兵" << endl;
-								this->mytroop.push_back(Troop(inf->soldierInfo[k], k));
-								//cout << "结束push自己的士兵" << endl;
+								if (inf->soldierInfo[k].type != Mangonel) {
+									this->mytroop.push_back(Troop(inf->soldierInfo[k], k));
+								}
+								else {
+									this->mymangonel.push_back(Troop(inf->soldierInfo[k], k));
+								}
 							}
 							else {
 								this->enemy.push_back(Enemy(inf->soldierInfo[k]));
@@ -486,6 +494,11 @@ public:
 		for (unsigned int i = 0; i < t.mytroop.size(); i++) {
 			mytroop.push_back(t.mytroop[i]);
 		}
+
+		for (unsigned int i = 0; i < t.mymangonel.size(); i++) {
+			mymangonel.push_back(t.mymangonel[i]);
+		}
+
 		for (unsigned int i = 0; i < t.enemy.size(); i++) {
 			enemy.push_back(t.enemy[i]);
 		}
@@ -519,6 +532,7 @@ public:
 	int point[2];
 	int length;                     //塔的视野
 	vector<Troop> mytroop;
+	vector<Troop> mymangonel;
 	vector<Enemy> enemy;
 
 	int danger;               //表示危险程度，正为敌方控制，负为我方控制
@@ -610,8 +624,14 @@ public:
 
 		for (unsigned int i = 0; i < inf->soldierInfo.size(); i++) {
 			if (inf->soldierInfo[i].owner == my_id) {
-				MyTroop.push_back(Troop(inf->soldierInfo[i], i));
-				SoldierNum[inf->soldierInfo[i].type]++;  //计数
+				if (inf->soldierInfo[i].type != Mangonel) {
+					MyTroop.push_back(Troop(inf->soldierInfo[i], i));
+					SoldierNum[inf->soldierInfo[i].type]++;  //计数
+				}
+				else {
+					MyMangonel.push_back(Troop(inf->soldierInfo[i], i));
+					SoldierNum[inf->soldierInfo[i].type]++;  //计数
+				}
 			}
 			else {
 				EnemyTroop.push_back(inf->soldierInfo[i]);
@@ -629,6 +649,7 @@ public:
 	vector<double> EnemyEvaluation;    //敌人评估值
 	vector<Tower> TowerInf;
 	vector<Troop> MyTroop;
+	vector<Troop> MyMangonel;
 	vector<Enemy> EnemyTroop;
 
 
@@ -907,7 +928,7 @@ void Tower::defense(vector<Troop>& total_troop) {
 			//cout << mytroop[i].base.id << "check" << "1.1.1" << endl;
 			if (distance(mytroop[i].base.position, enemy[k].base.position) <= mytroop[i].base.range)
 				inf->myCommandList.addCommand(Attack, mytroop[i].base.id, enemy[k].base.x_position, enemy[k].base.y_position);
-			
+
 			//cout << mytroop[i].base.id<< "check" << "1.1.2" << endl;
 			mytroop[i].withdraw();
 			//cout << mytroop[i].base.id << "check" << "1.1.3" << endl;
@@ -1030,44 +1051,44 @@ void Troop::endplace(TPoint t) {
 
 void Troop::attackplace(int x, int y) {
 	//cout <<base.id<< "endplace" << endl;
-									   int a = base.x_position;
-									   int b = base.y_position;
-									   int  min = distance(a, b, x, y) + 20;
-									   int len = base.range;
-									   int number = (2 * len + 1)*(2 * len + 1);
-									   int(*score)[3] = new int[number][3]; //0:x 1:y 2:score
-									   place[0] = a; place[1] = b;
-									  // cout <<  "check" << "1.1.1.0" << endl;
-									   for (int i = 0; i < 2 * len + 1; i++) {
-									   for (int j = 0; j < 2 * len + 1; j++) {
-									   int rt = i * (2 * len + 1) + j;
-									   score[rt][0] = x - len + i; score[rt][1] = y - len + j; score[rt][2] = distance(a, b, score[rt][0], score[rt][1]);
-									   if (flag(score[rt][0], score[rt][1])) {
-									   if (!(inf->pointInfo[score[rt][0]][score[rt][1]].occupied_type == 0)
-									   || !(inf->pointInfo[score[rt][0]][score[rt][1]].land != 2)) {
-									   score[rt][2] += 1000;
-									   }
+	int a = base.x_position;
+	int b = base.y_position;
+	int  min = distance(a, b, x, y) + 20;
+	int len = base.range;
+	int number = (2 * len + 1)*(2 * len + 1);
+	int(*score)[3] = new int[number][3]; //0:x 1:y 2:score
+	place[0] = a; place[1] = b;
+	// cout <<  "check" << "1.1.1.0" << endl;
+	for (int i = 0; i < 2 * len + 1; i++) {
+		for (int j = 0; j < 2 * len + 1; j++) {
+			int rt = i * (2 * len + 1) + j;
+			score[rt][0] = x - len + i; score[rt][1] = y - len + j; score[rt][2] = distance(a, b, score[rt][0], score[rt][1]);
+			if (flag(score[rt][0], score[rt][1])) {
+				if (!(inf->pointInfo[score[rt][0]][score[rt][1]].occupied_type == 0)
+					|| !(inf->pointInfo[score[rt][0]][score[rt][1]].land != 2)) {
+					score[rt][2] += 1000;
+				}
 
-									   if (distance(a, b, score[rt][0], score[rt][1]) <= move_left) score[rt][2] -= 5;
-									   if (distance(x, y, score[rt][0], score[rt][1]) <= len) score[rt][2] -= 5;
-									   if (inf->pointInfo[score[rt][0]][score[rt][1]].land == 1) {
-									   if (base.type == 3 || base.type == 7 || base.type == 2 || base.type == 6) score[rt][2] -= 2;
-									   }
+				if (distance(a, b, score[rt][0], score[rt][1]) <= move_left) score[rt][2] -= 5;
+				if (distance(x, y, score[rt][0], score[rt][1]) <= len) score[rt][2] -= 5;
+				if (inf->pointInfo[score[rt][0]][score[rt][1]].land == 1) {
+					if (base.type == 3 || base.type == 7 || base.type == 2 || base.type == 6) score[rt][2] -= 2;
+				}
 
-									   if (inf->pointInfo[score[rt][0]][score[rt][1]].land == 4) {
-									   if (base.type == 5 || base.type == 6 || base.type == 7) score[rt][2] -= 2;
-									   }
+				if (inf->pointInfo[score[rt][0]][score[rt][1]].land == 4) {
+					if (base.type == 5 || base.type == 6 || base.type == 7) score[rt][2] -= 2;
+				}
 
-									   if (score[rt][2] < min) {
-									   min = score[rt][2];
-									   place[0] = score[rt][0]; place[1] = score[rt][1];
-									   }
-									   }
-									   }
+				if (score[rt][2] < min) {
+					min = score[rt][2];
+					place[0] = score[rt][0]; place[1] = score[rt][1];
+				}
+			}
+		}
 
-									   }
-									   //cout << "check" << "1.1.1.1" << endl;
-	
+	}
+	//cout << "check" << "1.1.1.1" << endl;
+
 }
 
 
@@ -1077,27 +1098,27 @@ void Troop::attackplace(TPoint t) {
 
 void Troop::search(int type) {
 	int a = current_position[0], b = current_position[1];
-	
-		int min = move_left, c = a - move_left, d = b - move_left;
-		place[0] = a; place[1] = b;
-		for (int i = 0; i < 2 * move_left + 1; i++) {
-			for (int j = 0; j < 2 * move_left + 1; j++) {
-				if (flag(c + i, d + j)) {
-					if (inf->pointInfo[c + i][d + j].land == type && inf->pointInfo[c + i][d + j].occupied_type == 0 && distance(a, b, c + i, d + j) <= min) {
-						min = distance(a, b, c + i, d + j);
-						place[0] = c + i; place[1] = d + j;
-					}
+
+	int min = move_left, c = a - move_left, d = b - move_left;
+	place[0] = a; place[1] = b;
+	for (int i = 0; i < 2 * move_left + 1; i++) {
+		for (int j = 0; j < 2 * move_left + 1; j++) {
+			if (flag(c + i, d + j)) {
+				if (inf->pointInfo[c + i][d + j].land == type && inf->pointInfo[c + i][d + j].occupied_type == 0 && distance(a, b, c + i, d + j) <= min) {
+					min = distance(a, b, c + i, d + j);
+					place[0] = c + i; place[1] = d + j;
 				}
 			}
 		}
-		go();
-	
+	}
+	go();
+
 }
 void Troop::withdraw() {
 	if (move_left > 0) {
 		if (base.type == 3 || base.type == 2 || base.type == 6) search(1);
 		if (base.type == 5 || base.type == 6 || base.type == 7) search(4);
-			}
+	}
 }
 void Troop::investigation() {
 	//获取周围视野
@@ -1114,7 +1135,12 @@ void Troop::investigation() {
 					if (inf->soldierInfo[k].id == soldier_id) {  //找到士兵
 
 						if (inf->soldierInfo[k].owner == current_id) {
-							this->mytroop.push_back(Troop(inf->soldierInfo[k], k));
+							if (inf->soldierInfo[k].type != Mangonel) {
+								this->mytroop.push_back(Troop(inf->soldierInfo[k], k));
+							}
+							else {
+								this->mymangonel.push_back(Troop(inf->soldierInfo[k], k));
+							}
 
 						}
 						else {
@@ -1187,7 +1213,7 @@ void Troop::go() {
 			{
 				if (inf->pointInfo[current_position[0] + x * (2 * way[0] - 5)][current_position[1]].occupied_type == 0) {
 					inf->myCommandList.addCommand(Move, base.id, way[0], x); move_left -= x; current_position[0] += x * (2 * way[0] - 5);
-					inf->myCommandList.addCommand(Move, base.id, way[2], y); move_left -= y; current_position[1] += y * (1-2*way[2] );
+					inf->myCommandList.addCommand(Move, base.id, way[2], y); move_left -= y; current_position[1] += y * (1 - 2 * way[2]);
 					//cout << "id" << " " << base.id << " " << "up down" << endl;
 
 				}
@@ -1203,7 +1229,7 @@ void Troop::go() {
 			}
 		}
 
-	
+
 		else if (way[2] == -1) {
 			int fla = 0;
 			for (int i = 1; i < way[1] + 1; i++) {
@@ -1223,7 +1249,7 @@ void Troop::go() {
 				int fle = 0;
 				for (int i = -move_left; i <= move_left; i++) {
 					int x = current_position[0] + 2 * way[0] - 5, y = current_position[1] + i;
-					if (flag(x, y) == 1){
+					if (flag(x, y) == 1) {
 						if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) {
 							if (i < 0) {
 								inf->myCommandList.addCommand(Move, base.id, 1, -i);
@@ -1254,13 +1280,13 @@ void Troop::go() {
 							}
 							break;
 						}
-				}
+					}
 				}
 				if (fle == 0) {
 					inf->myCommandList.addCommand(Move, base.id, way[0], way[1]);
 					//cout << "id" << " " << base.id << " " << "ver run" << endl;
 					move_left -= way[1];
-					current_position[0] += way[1]* (2 * way[0] - 5);
+					current_position[0] += way[1] * (2 * way[0] - 5);
 				}
 			}
 		}
@@ -1282,7 +1308,7 @@ void Troop::go() {
 				int  lafq = 0;
 				for (int i = -move_left; i <= move_left; i++) {
 					int x = current_position[0] + i, y = current_position[1] + 1 - 2 * way[2];
-					if (flag(x, y) == 1){
+					if (flag(x, y) == 1) {
 						if (inf->pointInfo[x][y].occupied_type == 0 && inf->pointInfo[x][y].land != 2) {
 							if (i < 0) {
 								inf->myCommandList.addCommand(Move, base.id, 2, -i);
@@ -1302,7 +1328,7 @@ void Troop::go() {
 								inf->myCommandList.addCommand(Move, base.id, 3, i);
 								//cout << "id" << " " << base.id << " " << "extr right" << endl;
 								move_left -= i;
-								current_position[0] +=i;
+								current_position[0] += i;
 								for (int j = 0; j < move_left - i; j++) {
 									inf->myCommandList.addCommand(Move, base.id, way[2], 1);
 									//cout << "id" << " " << base.id << " " << "hor one" << endl;
@@ -1314,7 +1340,7 @@ void Troop::go() {
 							}
 							break;
 						}
-				}
+					}
 				}
 				if (lafq == 0) {
 					inf->myCommandList.addCommand(Move, base.id, way[2], way[3]);
@@ -1356,12 +1382,44 @@ void Troop::map_go(Map& m) {
 
 void Troop::clean() {
 	if (base.attackable) {
-		int x = current_position[0] - base.range, y = current_position[1] - base.range;
-		for (int i = 0; i < 2 * base.range + 1; i++)
-			for (int j = 0; j < 2 * base.range + 1; j++)
-			{
+		if (base.type != Mangonel) {
+			int x = current_position[0] - base.range, y = current_position[1] - base.range;
+			for (int i = 0; i < 2 * base.range + 1; i++)
+				for (int j = 0; j < 2 * base.range + 1; j++)
 				{
-					if (flag(x + i, y + j) ==1) {
+					{
+						if (flag(x + i, y + j) == 1) {
+							if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
+								int belong = 0;
+								for (unsigned int k = 0; k < mytroop.size(); k++) {
+									if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
+										belong = 1;
+									}
+								}
+								if (belong == 0)
+									inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+							}
+							if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
+								inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+
+						}
+					}
+				}
+		}
+		else {  //如果是投石车处理逻辑
+
+		}
+	}
+}
+
+void Troop::clean(int a) {
+	if (base.attackable) {
+		if (base.type != Mangonel) {
+			int x = base.x_position - base.range - base.move_left, y = base.y_position - base.range - base.move_left;
+			for (int i = 0; i < 2 * (base.range + base.move_left) + 1; i++)
+				for (int j = 0; j < 2 * (base.range + base.move_left) + 1; j++)
+				{
+					if (flag(x + i, y + j) == 1) {
 						if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
 							int belong = 0;
 							for (unsigned int k = 0; k < mytroop.size(); k++) {
@@ -1374,34 +1432,12 @@ void Troop::clean() {
 						}
 						if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
 							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
-
 					}
 				}
-			}
-	}
-}
+		}
+		else {  //如果是投石车
 
-void Troop::clean(int a) {
-	if (base.attackable) {
-		int x = base.x_position - base.range - base.move_left, y = base.y_position - base.range - base.move_left;
-		for (int i = 0; i < 2 * (base.range + base.move_left) + 1; i++)
-			for (int j = 0; j < 2 * (base.range + base.move_left) + 1; j++)
-			{
-				if (flag(x + i, y + j) ==1 ) {
-					if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
-						int belong = 0;
-						for (unsigned int k = 0; k<mytroop.size(); k++) {
-							if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
-								belong = 1;
-							}
-						}
-						if (belong == 0)
-							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
-					}
-					if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
-						inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
-				}
-			}
+		}
 	}
 }
 
@@ -1421,82 +1457,93 @@ void Troop::march() {
 
 void Troop::attack() {
 	//cout << "check 6.11110" << " " << base.id << endl;
-	if (duty == ATTACK) {
-		//cout << "check 6.111100" << endl;
-		int current_area_flag = 0;  //默认为1模式，即认为无士兵，通过
-		
-		int total_enemy_blood = 0;
-		int total_enemy_armor = 0;
-		int total_enemy_attack = 0;
-		int total_my_blood = 0;
-		int total_my_armor = 0;
-		int total_my_attack = 0;
-		for (unsigned int i = 0; i < enemy.size(); i++) {
-			total_enemy_blood += enemy[i].base.blood;
-			total_enemy_attack += enemy[i].base.attack;
-			total_enemy_armor += enemy[i].base.armor;
-		}
-		for (unsigned int i = 0; i < mytroop.size(); i++) {
-			total_my_blood += mytroop[i].base.blood;
-			total_my_attack += mytroop[i].base.attack;
-			total_my_armor += mytroop[i].base.armor;
-	
-		}
-		//cout << "check 6.111101" << endl;
-		if (enemy.size()) {
-			double defeat_round = 999;
-			double victory_round = 999;
-			if (total_enemy_attack - total_my_armor > 0) {
-				defeat_round = total_my_blood / (total_enemy_attack - total_my_armor);
+
+	if (base.type == Mangonel) {  //投石车攻击逻辑
+
+	}
+
+	else {
+
+		if (duty == ATTACK) {
+			//cout << "check 6.111100" << endl;
+			int current_area_flag = 0;  //默认为1模式，即认为无士兵，通过
+
+			int total_enemy_blood = 0;
+			int total_enemy_armor = 0;
+			int total_enemy_attack = 0;
+			int total_my_blood = 0;
+			int total_my_armor = 0;
+			int total_my_attack = 0;
+			for (unsigned int i = 0; i < enemy.size(); i++) {
+				total_enemy_blood += enemy[i].base.blood;
+				total_enemy_attack += enemy[i].base.attack;
+				total_enemy_armor += enemy[i].base.armor;
 			}
-			if (total_my_attack - total_enemy_armor > 0) {
-				victory_round = total_enemy_blood / (total_my_attack - total_enemy_armor);
+			for (unsigned int i = 0; i < mytroop.size(); i++) {
+				total_my_blood += mytroop[i].base.blood;
+				total_my_attack += mytroop[i].base.attack;
+				total_my_armor += mytroop[i].base.armor;
+
 			}
-	
-			if (defeat_round < 0.67*victory_round)       //我方有优势时，优先打附近的兵
-				current_area_flag = 2;
+			//cout << "check 6.111101" << endl;
+			if (enemy.size()) {
+				double defeat_round = 999;
+				double victory_round = 999;
+				if (total_enemy_attack - total_my_armor > 0) {
+					defeat_round = total_my_blood / (total_enemy_attack - total_my_armor);
+				}
+				if (total_my_attack - total_enemy_armor > 0) {
+					victory_round = total_enemy_blood / (total_my_attack - total_enemy_armor);
+				}
+
+				if (defeat_round < 0.67*victory_round)       //我方有优势时，优先打附近的兵
+					current_area_flag = 2;
+
+			}
+			//cout << "check 6.111102" << endl;
+
+			if (current_area_flag == 0) {
+				endplace(inf->towerInfo[last_attack_tower].position);
+				int d = distance(base.x_position, base.y_position, place[0], place[1]);
+				/*if (base.x_position == place[0] && base.y_position == place[1]) {
+				gettower();
+				}*/
+
+				if (d < base.range)  gettower();
+				else go();
+
+
+			}
+			//cout << "check 6.111103" << endl;
+			if (current_area_flag == 2) {
+				attackplace(enemy[0].base.position);
+				go();
+			}
+			//cout << "check 6.111104" << endl;
 
 		}
-		//cout << "check 6.111102" << endl;
-
-		if (current_area_flag == 0) {
-			endplace(inf->towerInfo[last_attack_tower].position);
-			int d = distance(base.x_position, base.y_position, place[0], place[1]);
-			/*if (base.x_position == place[0] && base.y_position == place[1]) {
-			gettower();
-			}*/
-			
-			if (d < base.range)  gettower();
-			else go(); 
-			
-			
-		}
-		//cout << "check 6.111103" << endl;
-		if (current_area_flag == 2) {
-			attackplace(enemy[0].base.position);
-			go();
-		}
-		//cout << "check 6.111104" << endl;
-
 	}
 	//cout << "check 6.111101" << endl;
 }
 
-void Troop::attack(int soldierid) {
-
-}
 
 void Troop::defense(int towerid) {
-	//cout << "Check 4.X.X.start" << endl;
-	if (duty == DEFENSE) {
-		//cout << "Check 4.X.X.1" << endl;
-		endplace(inf->towerInfo[towerid].position);
-		//cout << "Check 4.X.X.2" << endl;
-		go();
-		//cout << "Check 4.X.X.3" << endl;
+	if (base.type == Mangonel) {  //投石车防御逻辑，肉盾？？？
+
+
 	}
+	//cout << "Check 4.X.X.start" << endl;
 	else {
-		//cout << "士兵" << base.id << "被塔占用，不能进行回防" << endl;
+		if (duty == DEFENSE) {
+			//cout << "Check 4.X.X.1" << endl;
+			endplace(inf->towerInfo[towerid].position);
+			//cout << "Check 4.X.X.2" << endl;
+			go();
+			//cout << "Check 4.X.X.3" << endl;
+		}
+		else {
+			//cout << "士兵" << base.id << "被塔占用，不能进行回防" << endl;
+		}
 	}
 	//cout << "Check 4.X.X.end" << endl;
 }
@@ -1635,7 +1682,7 @@ void Decision::defense() {
 		for (unsigned int i = 0; i < id_distance.size() && get_duty_num(DEFENSE)<sum_soldier_need; i++) {
 			data->MyTroop[findorigin(id_distance[i].index)].duty = DEFENSE;  //自由士兵防守
 
-			//data->MyTroop[findorigin(id_distance[i].index)].defense(current_defense_tower[0]);     //暂时只防守一座塔
+																			 //data->MyTroop[findorigin(id_distance[i].index)].defense(current_defense_tower[0]);     //暂时只防守一座塔
 			if (get_duty_num(DEFENSE) >= sum_soldier_need) {
 				safe_flag = true;
 				break;
@@ -1703,6 +1750,12 @@ void Decision::attack() {
 			}
 		}
 
+		for (unsigned int i = 0; i < data->MyMangonel.size(); i++) {
+			if (data->MyMangonel[i].duty == FREE) {
+				data->MyMangonel[i].duty = ATTACK;
+			}
+		}
+
 	}
 
 }
@@ -1711,6 +1764,11 @@ void Decision::clean() {
 	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
 		data->MyTroop[i].clean();
 	}
+
+	for (unsigned int i = 0; i < data->MyMangonel.size(); i++) {
+		data->MyMangonel[i].clean();
+	}
+
 }
 
 void Decision::analyse_tower() {
@@ -1761,6 +1819,9 @@ void Decision::analyse_troop() {
 	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
 		data->MyTroop[i].evaluate();
 	}
+	for (unsigned int i = 0; i < data->MyMangonel.size(); i++) {
+		data->MyMangonel[i].evaluate();
+	}
 
 }
 
@@ -1768,7 +1829,7 @@ void Decision::analyse_troop() {
 void Decision::product() { //生产，需利用generate后的数据
 	int Soldier_resourse[8] = { 0,40,40,50,70,55,60,70 };
 	int* propotion;
-	if (data->MyTroop.size() < DIVISION_OF_SOLDIER_PROPOTION )
+	if (data->MyTroop.size() < DIVISION_OF_SOLDIER_PROPOTION)
 		propotion = propotion_short;
 	else
 		propotion = propotion_long;
@@ -1802,6 +1863,10 @@ void Decision::product() { //生产，需利用generate后的数据
 
 		if (CurrentState != NUM_KINDS_SOLDIER) {       //确定造兵
 			CurrentState = argmin;
+			//以下处理造投石车逻辑
+			//
+
+
 			//如果资源允许，开始造兵
 			//cout << CurrentState << endl;
 			for (unsigned int i = 0; i < occupied.size(); i++) {
@@ -1926,6 +1991,12 @@ void Decision::command_troop() {
 		//cout << "check" << "6.19" << endl;
 	}
 	//cout << "check" << "6.9" << endl;
+
+
+	for (unsigned int i = 0; i < data->MyMangonel.size(); i++) {  //对投石车的指挥
+
+	}
+
 }
 
 void Decision::get_gamestate() {
@@ -2050,7 +2121,7 @@ void Decision::command() {
 
 	//cout << "check 1" << endl;
 	command_tower(); //向塔传达指令	
-	//cout << "check 2" << endl;
+					 //cout << "check 2" << endl;
 
 	clean();
 
@@ -2088,7 +2159,7 @@ void Decision::command() {
 
 	//策略后基础操作
 	command_troop(); //向兵传达指令
-	//cout << "check 7" << endl;
+					 //cout << "check 7" << endl;
 	clean();
 	//cout << "check 8" << endl;
 	product();
