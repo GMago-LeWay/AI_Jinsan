@@ -1407,7 +1407,37 @@ void Troop::clean() {
 				}
 		}
 		else {  //如果是投石车处理逻辑
+			int x = current_position[0] - base.range, y = current_position[1] - base.range;
+			for (int i = 0; i < 2 * base.range + 1; i++)
+				for (int j = 0; j < 2 * base.range + 1; j++)   //先寻找可攻击塔
+				{
+					if (flag(x + i, y + j) == 1) {
+						
+						if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
+							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
 
+					}
+					
+				}
+
+			for (int i = 0; i < 2 * base.range + 1; i++)
+				for (int j = 0; j < 2 * base.range + 1; j++)    //再寻找可攻击士兵
+				{
+					if (flag(x + i, y + j) == 1) {
+						if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
+							int belong = 0;
+							for (unsigned int k = 0; k < mytroop.size(); k++) {
+								if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
+									belong = 1;
+								}
+							}
+							if (belong == 0)
+								inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+						}
+
+					}
+
+				}
 		}
 	}
 }
@@ -1435,8 +1465,26 @@ void Troop::clean(int a) {
 					}
 				}
 		}
-		else {  //如果是投石车
-
+		else {  //如果是投石车,扫荡逻辑基本相同，扫荡时不打非目标塔
+			int x = base.x_position - base.range - base.move_left, y = base.y_position - base.range - base.move_left;
+			for (int i = 0; i < 2 * (base.range + base.move_left) + 1; i++)
+				for (int j = 0; j < 2 * (base.range + base.move_left) + 1; j++)
+				{
+					if (flag(x + i, y + j) == 1) {
+						if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
+							int belong = 0;
+							for (unsigned int k = 0; k < mytroop.size(); k++) {
+								if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
+									belong = 1;
+								}
+							}
+							if (belong == 0)
+								inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+						}
+						if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable && inf->pointInfo[x + i][y + j].tower == last_attack_tower)
+							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+					}
+				}
 		}
 	}
 }
@@ -1459,7 +1507,11 @@ void Troop::attack() {
 	//cout << "check 6.11110" << " " << base.id << endl;
 
 	if (base.type == Mangonel) {  //投石车攻击逻辑
+		endplace(inf->towerInfo[last_attack_tower].position);
+		int d = distance(base.x_position, base.y_position, place[0], place[1]);
 
+		if (d < base.range)  gettower();
+		else go();
 	}
 
 	else {
@@ -1529,7 +1581,11 @@ void Troop::attack() {
 
 void Troop::defense(int towerid) {
 	if (base.type == Mangonel) {  //投石车防御逻辑，肉盾？？？
+		if (duty == DEFENSE) {
+			endplace(inf->towerInfo[towerid].position);
 
+			go();
+		}
 
 	}
 	//cout << "Check 4.X.X.start" << endl;
@@ -1736,6 +1792,11 @@ void Decision::attack() {
 	if (this->get_duty_num(FREE) > data->TowerInf[last_attack_tower].enemy.size())
 		attack_flag = true;
 
+	if (data->MyMangonel.size()) {
+		if (this->get_duty_num(FREE) + data->MyMangonel.size() >= data->TowerInf[last_attack_tower].enemy.size())
+			attack_flag = true;
+	}
+
 	if (attack_flag) {
 
 
@@ -1864,8 +1925,16 @@ void Decision::product() { //生产，需利用generate后的数据
 		if (CurrentState != NUM_KINDS_SOLDIER) {       //确定造兵
 			CurrentState = argmin;
 			//以下处理造投石车逻辑
-			//
+			bool mangonel_flag = false;
+			if (data->MyTroop.size() == 6 && data->MyMangonel.size() == 0)
+				mangonel_flag = true;
+			if (data->MyTroop.size() == 9 && data->MyMangonel.size() == 1)
+				mangonel_flag = true;
+			if (data->MyTroop.size() >= 12 && data->MyTroop.size() % 2 == 0 && data->MyMangonel.size() == (data->MyTroop.size() - 8) / 2)
+				mangonel_flag = true;
 
+			if (mangonel_flag)
+				CurrentState = Mangonel;
 
 			//如果资源允许，开始造兵
 			//cout << CurrentState << endl;
@@ -1994,7 +2063,28 @@ void Decision::command_troop() {
 
 
 	for (unsigned int i = 0; i < data->MyMangonel.size(); i++) {  //对投石车的指挥
+		State type = data->MyMangonel[i].duty;
+		if (type == ATTACK) {
+			
+			data->MyMangonel[i].attack();
+			if (data->MyMangonel[i].move_left > 0) data->MyMangonel[i].withdraw();
+			
+		}
 
+		else if (type == FREE) {
+			
+			int min_distance = 999;
+			int argmin = 0;
+			for (unsigned int j = 0; j < data->TowerInf.size(); j++) {
+				if (distance(data->TowerInf[j].base.position, data->MyMangonel[i].base.position) <= min_distance) {
+					min_distance = distance(data->TowerInf[j].base.position, data->MyMangonel[i].base.position);
+					argmin = j;
+				}
+			}
+			
+			data->MyMangonel[i].defense(argmin);
+			
+		}
 	}
 
 }
