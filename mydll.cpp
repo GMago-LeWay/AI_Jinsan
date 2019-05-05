@@ -1811,12 +1811,13 @@ void Decision::attack() {
 			}
 		}
 
-		for (unsigned int i = 0; i < data->MyMangonel.size(); i++) {
-			if (data->MyMangonel[i].duty == FREE) {
-				data->MyMangonel[i].duty = ATTACK;
-			}
-		}
 
+	}
+
+	for (unsigned int i = 0; i < data->MyMangonel.size(); i++) {
+		if (data->MyMangonel[i].duty == FREE) {
+			data->MyMangonel[i].duty = ATTACK;
+		}
 	}
 
 }
@@ -1926,11 +1927,11 @@ void Decision::product() { //生产，需利用generate后的数据
 			CurrentState = argmin;
 			//以下处理造投石车逻辑
 			bool mangonel_flag = false;
-			if (data->MyTroop.size() == 6 && data->MyMangonel.size() == 0)
+			if (data->MyTroop.size() == 5 && data->MyMangonel.size() == 0)
 				mangonel_flag = true;
-			if (data->MyTroop.size() == 9 && data->MyMangonel.size() == 1)
+			if (data->MyTroop.size() == 7 && data->MyMangonel.size() == 1)
 				mangonel_flag = true;
-			if (data->MyTroop.size() >= 12 && data->MyTroop.size() % 2 == 0 && data->MyMangonel.size() == (data->MyTroop.size() - 8) / 2)
+			if (data->MyTroop.size() >= 10 && data->MyTroop.size() % 2 == 0 && data->MyMangonel.size() == (data->MyTroop.size() - 6) / 2)
 				mangonel_flag = true;
 
 			if (mangonel_flag)
