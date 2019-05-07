@@ -2114,6 +2114,10 @@ void Decision::get_gamestate() {
 
 	else
 		gamestate = TOWER_ATTACK;
+	
+	if (data->MyTroop.size() <= 2 && inf->round >= 20) {
+		gamestate = GS_SURVIVAL;
+	}
 }
 
 void Decision::shortterm() {
@@ -2247,6 +2251,13 @@ void Decision::command() {
 		gs_defense();
 	}
 
+	else if (gamestate == GS_SURVIVAL) {
+		for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
+			//cout << "Check 1" << endl;
+			data->MyTroop[i].withdraw();
+			//cout << "Check 2" << endl;
+		}
+	}
 
 	//策略后基础操作
 	command_troop(); //向兵传达指令
