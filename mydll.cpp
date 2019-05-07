@@ -2121,9 +2121,9 @@ void Decision::get_gamestate() {
 	else
 		gamestate = TOWER_ATTACK;
 	
-	if (data->MyTroop.size() <= 2 && inf->round >= 20) {
+	/*if (data->MyTroop.size() <= 2 && inf->round >= 20) {
 		gamestate = GS_SURVIVAL;
-	}
+	}*/
 }
 
 void Decision::shortterm() {
