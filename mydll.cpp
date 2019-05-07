@@ -958,9 +958,9 @@ void Tower::static_generate() {
 
 	//cout <<"正则化因子"<< normalizer_accessible << " " << normalizer_danger << " " << normalizer_convenience;
 
-	double weigh_accessible = 1;
-	double weigh_danger = 0.5;
-	double weigh_troop_convenience = 2;
+	double weigh_accessible = 0;
+	double weigh_danger = 2;
+	double weigh_troop_convenience = 1;
 	double weigh_blood = 2;
 
 	double weigh_convenience = 1;
@@ -970,9 +970,9 @@ void Tower::static_generate() {
 	product_evaluation = weigh_convenience * convenience / normalizer_convenience - weigh_blood_p * base.blood / normalizer_blood;
 
 	/*if (base.id == 8 && inf->playerInfo[current_id].tower_num >= 2 && inf->playerInfo[current_id].soldier_num >= 6)
-		attack_evaluation -= 10;
+	attack_evaluation -= 10;
 	else
-		attack_evaluation += 10;*/
+	attack_evaluation += 10;*/
 
 	if (base.id == 8) {
 		attack_evaluation += 10;
@@ -1417,12 +1417,12 @@ void Troop::clean() {
 				for (int j = 0; j < 2 * base.range + 1; j++)   //先寻找可攻击塔
 				{
 					if (flag(x + i, y + j) == 1) {
-						
+
 						if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
 							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
 
 					}
-					
+
 				}
 
 			for (int i = 0; i < 2 * base.range + 1; i++)
@@ -2060,7 +2060,7 @@ void Decision::command_troop() {
 				}
 			}
 			//cout << "check" << "6.1132" << endl;
-			//data->MyTroop[i].duty = DEFENSE;
+			data->MyTroop[i].duty = DEFENSE;
 			data->MyTroop[i].defense(argmin);
 			//cout << "check" << "6.1133" << endl;
 		}
@@ -2072,14 +2072,14 @@ void Decision::command_troop() {
 	for (unsigned int i = 0; i < data->MyMangonel.size(); i++) {  //对投石车的指挥
 		State type = data->MyMangonel[i].duty;
 		if (type == ATTACK) {
-			
+
 			data->MyMangonel[i].attack();
 			if (data->MyMangonel[i].move_left > 0) data->MyMangonel[i].withdraw();
-			
+
 		}
 
 		else if (type == FREE) {
-			
+
 			int min_distance = 999;
 			int argmin = 0;
 			for (unsigned int j = 0; j < data->TowerInf.size(); j++) {
@@ -2088,9 +2088,9 @@ void Decision::command_troop() {
 					argmin = j;
 				}
 			}
-			//data->MyMangonel[i].duty = DEFENSE;
+			data->MyMangonel[i].duty = DEFENSE;
 			data->MyMangonel[i].defense(argmin);
-			
+
 		}
 	}
 
@@ -2120,7 +2120,7 @@ void Decision::get_gamestate() {
 
 	else
 		gamestate = TOWER_ATTACK;
-	
+
 	/*if (data->MyTroop.size() <= 2 && inf->round >= 20) {
 		gamestate = GS_SURVIVAL;
 	}*/
