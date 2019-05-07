@@ -969,9 +969,14 @@ void Tower::static_generate() {
 	attack_evaluation = weigh_accessible * accessible / normalizer_accessible + weigh_danger * danger / normalizer_danger + weigh_troop_convenience * troop_convenience / normalizer_troop_convenience + weigh_blood * base.blood / normalizer_blood;
 	product_evaluation = weigh_convenience * convenience / normalizer_convenience - weigh_blood_p * base.blood / normalizer_blood;
 
-	if (base.id == 8)
-		attack_evaluation += 10;
+	/*if (base.id == 8 && inf->playerInfo[current_id].tower_num >= 2 && inf->playerInfo[current_id].soldier_num >= 6)
+		attack_evaluation -= 10;
+	else
+		attack_evaluation += 10;*/
 
+	if (base.id == 8) {
+		attack_evaluation += 10;
+	}
 	//cout << "塔" << base.id << "攻击评估:" << attack_evaluation << endl;
 
 }
@@ -2055,6 +2060,7 @@ void Decision::command_troop() {
 				}
 			}
 			//cout << "check" << "6.1132" << endl;
+			//data->MyTroop[i].duty = DEFENSE;
 			data->MyTroop[i].defense(argmin);
 			//cout << "check" << "6.1133" << endl;
 		}
@@ -2082,7 +2088,7 @@ void Decision::command_troop() {
 					argmin = j;
 				}
 			}
-			
+			//data->MyMangonel[i].duty = DEFENSE;
 			data->MyMangonel[i].defense(argmin);
 			
 		}
@@ -2194,7 +2200,32 @@ void Decision::soldier_attack() {
 }
 
 void Decision::gs_defense() {
-	defense();
+	for (unsigned int i = 0; i < data->MyTroop.size(); i++) {
+		int min_distance = 999;
+		int argmin = 0;
+		for (unsigned int j = 0; j < data->TowerInf.size(); j++) {
+			if (distance(data->TowerInf[j].base.position, data->MyTroop[i].base.position) <= min_distance) {
+				min_distance = distance(data->TowerInf[j].base.position, data->MyTroop[i].base.position);
+				argmin = j;
+			}
+		}
+		//cout << "check" << "6.1132" << endl;
+		data->MyTroop[i].duty = DEFENSE;
+		data->MyTroop[i].defense(argmin);
+
+	}
+	for (unsigned int i = 0; i < data->MyMangonel.size(); i++) {
+		int min_distance = 999;
+		int argmin = 0;
+		for (unsigned int j = 0; j < data->TowerInf.size(); j++) {
+			if (distance(data->TowerInf[j].base.position, data->MyMangonel[i].base.position) <= min_distance) {
+				min_distance = distance(data->TowerInf[j].base.position, data->MyMangonel[i].base.position);
+				argmin = j;
+			}
+		}
+		data->MyMangonel[i].duty = DEFENSE;
+		data->MyMangonel[i].defense(argmin);
+	}
 }
 
 void Decision::command() {
