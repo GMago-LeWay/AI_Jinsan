@@ -27,6 +27,7 @@ enum State {
 unsigned int CurrentState = 0;    //当前生产状态，小于NUM_KINDS_SOLDIER时为士兵，等于NUM_KINDS_SOLDIER时为升级塔
 int propotion_short[NUM_KINDS_SOLDIER] = { 0,0,1,3,0,0,1,0 };    //初期造兵造兵比例
 int propotion_long[NUM_KINDS_SOLDIER] = { 0,0,0,0,0,3,2,1 };    //后期造兵造兵比例
+vector<int> record_my_troop_id;   //我方所有士兵列表，包括已死亡的士兵
 
 int current_id;
 vector<int> current_attack_tower;
@@ -627,6 +628,16 @@ public:
 				if (inf->soldierInfo[i].type != Mangonel) {
 					MyTroop.push_back(Troop(inf->soldierInfo[i], i));
 					SoldierNum[inf->soldierInfo[i].type]++;  //计数
+					bool exist_flag = false;
+					for (unsigned int j = 0; j < record_my_troop_id.size(); j++) {
+						if (record_my_troop_id[j] == inf->soldierInfo[i].id) {
+							exist_flag = true;
+							break;
+						}
+
+					}
+					if (!exist_flag)
+						record_my_troop_id.push_back(inf->soldierInfo[i].id);
 				}
 				else {
 					MyMangonel.push_back(Troop(inf->soldierInfo[i], i));
@@ -849,7 +860,7 @@ unsigned int Tower::basicneed() {
 				need = 0;
 			}
 			else if (base.id == 1 || base.id == 7 || base.id == 5 || base.id == 3) {
-				need = 1;
+				need = 0;
 			}
 			else {
 				need = 2;
@@ -957,11 +968,25 @@ void Tower::static_generate() {
 	double normalizer_blood = 300;
 
 	//cout <<"正则化因子"<< normalizer_accessible << " " << normalizer_danger << " " << normalizer_convenience;
+	double sum_population = 0;
+	for (unsigned int i = 0; i < inf->playerInfo.size(); i++) {
+		sum_population += inf->playerInfo[i].population;
+	
+	}
+	double my_troop_propotion;
+	if (sum_population == 0) {
+		my_troop_propotion = 1;
+	}
+	else {
+		my_troop_propotion = inf->playerInfo[current_id].population / sum_population;
+	}
 
 	double weigh_accessible = 0;
-	double weigh_danger = 2;
+	//cout << "propotion " << my_troop_propotion << endl;
+	double weigh_danger = 0.6 / my_troop_propotion;
+	//cout << "weigh danger " << weigh_danger << endl;
 	double weigh_troop_convenience = 1;
-	double weigh_blood = 2;
+	double weigh_blood = 1;
 
 	double weigh_convenience = 1;
 	double weigh_blood_p = 2;
@@ -1896,10 +1921,12 @@ void Decision::analyse_troop() {
 void Decision::product() { //生产，需利用generate后的数据
 	int Soldier_resourse[8] = { 0,40,40,50,70,55,60,70 };
 	int* propotion;
-	if (data->MyTroop.size() < DIVISION_OF_SOLDIER_PROPOTION)
+	if (record_my_troop_id.size() < DIVISION_OF_SOLDIER_PROPOTION) {
 		propotion = propotion_short;
-	else
+	}
+	else {
 		propotion = propotion_long;
+	}
 
 	if (true) {
 		double cos_cost[NUM_KINDS_SOLDIER] = { 0 };
@@ -2122,7 +2149,7 @@ void Decision::get_gamestate() {
 		gamestate = TOWER_ATTACK;
 
 	/*if (data->MyTroop.size() <= 2 && inf->round >= 20) {
-		gamestate = GS_SURVIVAL;
+	gamestate = GS_SURVIVAL;
 	}*/
 }
 
