@@ -1036,8 +1036,7 @@ void Troop::move(int length) {
 
 }
 
-void Troop::endplace(int x, int y) {
-	int a = base.x_position;
+int a = base.x_position;
 	int b = base.y_position;
 	int d = distance(a, b, x, y);
 	if (x == 24 && y == 25 && d > 5) {
@@ -1045,7 +1044,8 @@ void Troop::endplace(int x, int y) {
 	}
 
 	else {
-		int min = 10000;
+		if (base.type != Mangonel){
+			int min = 10000;
 		place[0] = x - 1;
 		place[1] = y - 2;
 		for (int i = 0; i < 5; i = i + 4) {
@@ -1073,8 +1073,25 @@ void Troop::endplace(int x, int y) {
 			}
 		}
 	}
-}
+		if (base.type == Mangonel) {
+			int p = x - 6, q = y - 6, max = 0;
+			for(int i=0;i<13;i++)
+				for (int j = 0; j < 13; j++) {
+					if (flag(p + i, q + j)&& distance(p+i,q+j,x,y)<7) {
+						if (inf->pointInfo[p + i][q + j].occupied_type == 0&& inf->pointInfo[p + i][q + j].land!=2 && inf->pointInfo[p + i][q + j].land != 3) {
+							int gr = distance(p + i, q + j, x, y);
+							if (inf->pointInfo[p + i][q + j].land == 5) gr += 5;
+							if (gr > max) {
+								place[0] = p + i; place[1] = q + j; max = gr;
+							}
+						}
+					}
 
+				}
+
+		}
+	}
+}
 void Troop::endplace(TPoint t) {
 	endplace(t.x, t.y);
 }
@@ -1413,29 +1430,23 @@ void Troop::map_go(Map& m) {
 void Troop::clean() {
 	if (base.attackable) {
 		if (base.type != Mangonel) {
+			sort(enemy.begin(), enemy.end(), blood_left);
+			for (unsigned int k = 0; k < enemy.size(); k++) {
+				if (distance(current_position[0], current_position[1], enemy[k].base.x_position, enemy[k].base.y_position) <= base.range + 2 && base.attackable) {
+					inf->myCommandList.addCommand(Attack, base.id, enemy[k].base.x_position, enemy[k].base.y_position);
+				}
+			}
 			int x = current_position[0] - base.range, y = current_position[1] - base.range;
 			for (int i = 0; i < 2 * base.range + 1; i++)
 				for (int j = 0; j < 2 * base.range + 1; j++)
 				{
-					{
-						if (flag(x + i, y + j) == 1) {
-							if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
-								int belong = 0;
-								for (unsigned int k = 0; k < mytroop.size(); k++) {
-									if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
-										belong = 1;
-									}
-								}
-								if (belong == 0)
-									inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
-							}
-							if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
-								inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
+					if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
+						inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
 
-						}
-					}
 				}
 		}
+
+
 		else {  //如果是投石车处理逻辑
 			int x = current_position[0] - base.range, y = current_position[1] - base.range;
 			for (int i = 0; i < 2 * base.range + 1; i++)
@@ -1472,52 +1483,6 @@ void Troop::clean() {
 	}
 }
 
-void Troop::clean(int a) {
-	if (base.attackable) {
-		if (base.type != Mangonel) {
-			int x = base.x_position - base.range - base.move_left, y = base.y_position - base.range - base.move_left;
-			for (int i = 0; i < 2 * (base.range + base.move_left) + 1; i++)
-				for (int j = 0; j < 2 * (base.range + base.move_left) + 1; j++)
-				{
-					if (flag(x + i, y + j) == 1) {
-						if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
-							int belong = 0;
-							for (unsigned int k = 0; k < mytroop.size(); k++) {
-								if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
-									belong = 1;
-								}
-							}
-							if (belong == 0)
-								inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
-						}
-						if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable)
-							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
-					}
-				}
-		}
-		else {  //如果是投石车,扫荡逻辑基本相同，扫荡时不打非目标塔
-			int x = base.x_position - base.range - base.move_left, y = base.y_position - base.range - base.move_left;
-			for (int i = 0; i < 2 * (base.range + base.move_left) + 1; i++)
-				for (int j = 0; j < 2 * (base.range + base.move_left) + 1; j++)
-				{
-					if (flag(x + i, y + j) == 1) {
-						if (inf->pointInfo[x + i][y + j].occupied_type == 1) {
-							int belong = 0;
-							for (unsigned int k = 0; k < mytroop.size(); k++) {
-								if (inf->pointInfo[x + i][y + j].soldier == mytroop[k].base.id) {
-									belong = 1;
-								}
-							}
-							if (belong == 0)
-								inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
-						}
-						if (inf->pointInfo[x + i][y + j].occupied_type == 2 && base.attackable && inf->pointInfo[x + i][y + j].tower == last_attack_tower)
-							inf->myCommandList.addCommand(Attack, base.id, x + i, y + j);
-					}
-				}
-		}
-	}
-}
 
 bool Troop::change_duty(State s) {
 	if (duty == FREE) {
